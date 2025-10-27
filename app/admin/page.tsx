@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaUsers, FaSpinner, FaSignOutAlt } from "react-icons/fa";
+import { FaUsers, FaSpinner, FaSignOutAlt, FaTrash } from "react-icons/fa";
 
 interface User {
   id: number;
@@ -22,6 +22,7 @@ export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState("");
+  const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -68,6 +69,38 @@ export default function Admin() {
       router.push("/admin/login");
     } catch (error) {
       console.error("Logout error:", error);
+    }
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeletingUserId(userId);
+    try {
+      const response = await fetch("/api/users/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+
+      // Remove user from the list
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      alert("User deleted successfully!");
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Failed to delete user. Please try again.");
+    } finally {
+      setDeletingUserId(null);
     }
   };
 
@@ -181,6 +214,9 @@ export default function Admin() {
                     <th className="px-6 py-4 text-left text-sm font-semibold">
                       {t.admin.table.registeredAt}
                     </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -206,6 +242,22 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {formatDate(user.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          disabled={deletingUserId === user.id}
+                          className="inline-flex items-center px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingUserId === user.id ? (
+                            <FaSpinner className="animate-spin" />
+                          ) : (
+                            <>
+                              <FaTrash className="mr-2" />
+                              Delete
+                            </>
+                          )}
+                        </button>
                       </td>
                     </motion.tr>
                   ))}
@@ -257,6 +309,20 @@ export default function Admin() {
                       </span>
                     </div>
                   </div>
+                  <button
+                    onClick={() => handleDeleteUser(user.id)}
+                    disabled={deletingUserId === user.id}
+                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletingUserId === user.id ? (
+                      <FaSpinner className="animate-spin" />
+                    ) : (
+                      <>
+                        <FaTrash className="mr-2" />
+                        Delete User
+                      </>
+                    )}
+                  </button>
                 </motion.div>
               ))}
             </div>
