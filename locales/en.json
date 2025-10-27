@@ -1,0 +1,163 @@
+{
+  "navbar": {
+    "home": "Home",
+    "register": "Register",
+    "admin": "Admin",
+    "language": "Language"
+  },
+  "home": {
+    "hero": {
+      "title": "Welcome to CrackTET",
+      "subtitle": "Your Complete Guide to Maharashtra TET Success"
+    },
+    "aboutTET": {
+      "title": "About TET Exam",
+      "subtitle": "Maharashtra Teacher Eligibility Test",
+      "points": [
+        "State-level exam conducted by Maharashtra State Council of Examination (MSCE), Pune",
+        "Determines eligibility for teaching positions in government and private schools",
+        "Two levels: Paper I (Class 1-5) and Paper II (Class 6-8)",
+        "150 Multiple Choice Questions with no negative marking",
+        "2.5 hours duration per paper",
+        "Minimum qualifying marks: 60% for General, 55% for OBC/SC/ST/PwD",
+        "Lifetime validity of TET certificate"
+      ]
+    },
+    "whatIsCrackTET": {
+      "title": "What is CrackTET?",
+      "description": "CrackTET is your comprehensive learning platform designed specifically for Maharashtra TET exam preparation. We provide:",
+      "features": [
+        "Complete study materials aligned with the latest syllabus",
+        "Mock tests simulating the actual exam pattern",
+        "Previous year question papers with detailed solutions",
+        "Subject-wise practice tests for thorough preparation",
+        "Expert guidance and teaching strategies",
+        "Performance analytics to track your progress",
+        "Multi-language support (English, Hindi, Marathi)",
+        "Regular updates on exam notifications and dates"
+      ]
+    },
+    "whyChoose": {
+      "title": "Why Choose CrackTET?",
+      "reasons": [
+        {
+          "title": "Comprehensive Content",
+          "description": "Complete study material covering all topics of Paper I and Paper II"
+        },
+        {
+          "title": "Expert Guidance",
+          "description": "Prepared by experienced educators who understand the exam pattern"
+        },
+        {
+          "title": "Mock Tests",
+          "description": "Unlimited practice tests simulating the actual exam environment"
+        },
+        {
+          "title": "Performance Tracking",
+          "description": "Detailed analytics to identify your strengths and weaknesses"
+        },
+        {
+          "title": "Multi-language Support",
+          "description": "Learn in your preferred language - English, Hindi, or Marathi"
+        },
+        {
+          "title": "Free Resources",
+          "description": "Access to quality study materials and mock tests at no cost"
+        }
+      ]
+    }
+  },
+  "register": {
+    "title": "Register for CrackTET",
+    "subtitle": "Start your journey to becoming a certified teacher",
+    "form": {
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "district": "District",
+      "districtPlaceholder": "Select your district",
+      "mobile": "Mobile Number",
+      "mobilePlaceholder": "Enter 10-digit mobile number",
+      "password": "Password",
+      "passwordPlaceholder": "Create a strong password",
+      "submit": "Register Now"
+    },
+    "districts": [
+      "Mumbai City",
+      "Mumbai Suburban",
+      "Thane",
+      "Pune",
+      "Nagpur",
+      "Nashik",
+      "Aurangabad",
+      "Solapur",
+      "Kolhapur",
+      "Satara",
+      "Sangli",
+      "Ahmednagar",
+      "Raigad",
+      "Ratnagiri",
+      "Sindhudurg",
+      "Dhule",
+      "Jalgaon",
+      "Nandurbar",
+      "Amravati",
+      "Akola",
+      "Buldhana",
+      "Yavatmal",
+      "Washim",
+      "Hingoli",
+      "Parbhani",
+      "Jalna",
+      "Beed",
+      "Latur",
+      "Osmanabad",
+      "Nanded",
+      "Chandrapur",
+      "Gadchiroli",
+      "Gondia",
+      "Bhandara",
+      "Wardha"
+    ],
+    "success": "Registration Successful!",
+    "successMessage": "You have been successfully registered. Redirecting to home...",
+    "errors": {
+      "nameRequired": "Name is required",
+      "districtRequired": "Please select a district",
+      "mobileRequired": "Mobile number is required",
+      "mobileInvalid": "Please enter a valid 10-digit mobile number",
+      "mobileExists": "This mobile number is already registered",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 6 characters"
+    }
+  },
+  "admin": {
+    "title": "Registered Users",
+    "subtitle": "View all registered users and their details",
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "district": "District",
+      "mobile": "Mobile",
+      "registeredAt": "Registered At"
+    },
+    "noUsers": "No users registered yet",
+    "loading": "Loading users..."
+  },
+  "adminLogin": {
+    "title": "Admin Login",
+    "subtitle": "Access the admin dashboard",
+    "form": {
+      "adminId": "Admin ID",
+      "adminIdPlaceholder": "Enter your admin ID",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Login"
+    },
+    "errors": {
+      "adminIdRequired": "Admin ID is required",
+      "passwordRequired": "Password is required",
+      "invalidCredentials": "Invalid admin ID or password"
+    },
+    "redirecting": "Login successful! Redirecting..."
+  }
+}
