@@ -145,6 +145,7 @@
     "table": {
       "id": "आईडी",
       "name": "नाम",
+      "email": "ईमेल",
       "district": "जिला",
       "mobile": "मोबाइल",
       "registeredAt": "पंजीकृत तिथि"
