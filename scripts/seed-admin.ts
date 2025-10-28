@@ -1,8 +1,7 @@
 import * as dotenv from "dotenv";
-import { resolve } from "path";
 
-// Load environment variables
-dotenv.config({ path: resolve(__dirname, "../.env") });
+// Load environment variables from project root
+dotenv.config();
 
 import { db } from "../db";
 import { admins } from "../db/schema";

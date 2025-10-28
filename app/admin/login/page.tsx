@@ -80,7 +80,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center py-12 px-4">
+    <main className="min-h-screen w-full overflow-x-hidden bg-secondary-gray flex items-center justify-center py-12 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -97,10 +97,10 @@ export default function AdminLogin() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-lg mb-4">
             <FaUserShield className="text-4xl text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-primary mb-2">
             {t.adminLogin.title}
           </h1>
-          <p className="text-white/80">{t.adminLogin.subtitle}</p>
+          <p className="text-primary-light">{t.adminLogin.subtitle}</p>
         </motion.div>
 
         {/* Login Form */}
@@ -189,9 +189,9 @@ export default function AdminLogin() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center"
+          className="mt-6 bg-white rounded-lg p-4 text-center shadow-md"
         >
-          <p className="text-white/90 text-sm">
+          <p className="text-primary-light text-sm">
             For security purposes, only authorized personnel can access this area.
           </p>
         </motion.div>

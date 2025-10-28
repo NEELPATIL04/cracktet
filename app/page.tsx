@@ -49,7 +49,7 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden">
       {/* Hero Slideshow */}
-      <section className="relative h-[500px] w-full overflow-hidden bg-gradient-to-r from-primary to-primary-dark">
+      <section className="relative h-[500px] w-full overflow-hidden bg-secondary-gray">
         {/* Slideshow Background */}
         <div className="absolute inset-0">
           {slides.map((slide, index) => (
@@ -75,7 +75,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-5xl md:text-6xl font-bold mb-4"
+              className="text-5xl md:text-6xl font-bold mb-4 text-white"
             >
               {t.home.hero.title}
             </motion.h1>
@@ -84,7 +84,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-xl md:text-2xl mb-8"
+              className="text-xl md:text-2xl mb-8 text-white"
             >
               {t.home.hero.subtitle}
             </motion.p>
@@ -95,7 +95,7 @@ export default function Home() {
             >
               <Link
                 href="/register"
-                className="inline-block bg-white text-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors shadow-lg"
+                className="inline-block bg-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-dark transition-colors shadow-lg"
               >
                 {t.navbar.register}
               </Link>
@@ -253,16 +253,16 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ scale: 1.05 }}
-                  className="bg-gradient-to-br from-primary to-primary-dark text-white p-6 rounded-lg shadow-lg"
+                  className="bg-secondary-gray text-white p-6 rounded-lg shadow-lg border border-white/20"
                 >
-                  <motion.div
+                  {/* <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
-                  >
-                    <Icon className="text-5xl mb-4" />
-                  </motion.div>
-                  <h3 className="text-xl font-bold mb-2">{reason.title}</h3>
-                  <p className="text-white/90">{reason.description}</p>
+                  > */}
+                    <Icon className="text-5xl mb-4 text-white" />
+                  {/* </motion.div> */}
+                  <h3 className="text-xl font-bold mb-2 text-white">{reason.title}</h3>
+                  <p className="text-white">{reason.description}</p>
                 </motion.div>
               );
             })}
@@ -271,14 +271,14 @@ export default function Home() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 bg-gradient-to-r from-primary to-primary-dark text-white">
+      <section className="py-16 bg-secondary-gray">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-4xl font-bold mb-4"
+            className="text-4xl font-bold mb-4 text-white"
           >
             Ready to Start Your TET Journey?
           </motion.h2>
@@ -287,7 +287,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl mb-8"
+            className="text-xl mb-8 text-white"
           >
             Join thousands of aspiring teachers preparing for Maharashtra TET
           </motion.p>

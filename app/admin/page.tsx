@@ -9,6 +9,7 @@ import { FaUsers, FaSpinner, FaSignOutAlt, FaTrash } from "react-icons/fa";
 interface User {
   id: number;
   name: string;
+  email: string;
   district: string;
   mobile: string;
   createdAt: string;
@@ -206,6 +207,9 @@ export default function Admin() {
                       {t.admin.table.name}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">
+                      {t.admin.table.email}
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
                       {t.admin.table.district}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -226,13 +230,16 @@ export default function Admin() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="hover:bg-secondary-gray transition-colors"
+                      className="transition-colors"
                     >
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {user.id}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         {user.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {user.email}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {user.district}
@@ -284,6 +291,14 @@ export default function Admin() {
                     </span>
                   </div>
                   <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {t.admin.table.email}:
+                      </span>
+                      <span className="text-gray-900 font-medium">
+                        {user.email}
+                      </span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">
                         {t.admin.table.district}:

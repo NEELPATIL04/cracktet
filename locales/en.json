@@ -73,12 +73,16 @@
     "form": {
       "name": "Full Name",
       "namePlaceholder": "Enter your full name",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
       "district": "District",
       "districtPlaceholder": "Select your district",
       "mobile": "Mobile Number",
       "mobilePlaceholder": "Enter 10-digit mobile number",
       "password": "Password",
       "passwordPlaceholder": "Create a strong password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
       "submit": "Register Now"
     },
     "districts": [
@@ -122,12 +126,17 @@
     "successMessage": "You have been successfully registered. Redirecting to home...",
     "errors": {
       "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "emailExists": "This email is already registered",
       "districtRequired": "Please select a district",
       "mobileRequired": "Mobile number is required",
       "mobileInvalid": "Please enter a valid 10-digit mobile number",
       "mobileExists": "This mobile number is already registered",
       "passwordRequired": "Password is required",
-      "passwordMinLength": "Password must be at least 6 characters"
+      "passwordMinLength": "Password must be at least 6 characters",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match"
     }
   },
   "admin": {
@@ -136,6 +145,7 @@
     "table": {
       "id": "ID",
       "name": "Name",
+      "email": "Email",
       "district": "District",
       "mobile": "Mobile",
       "registeredAt": "Registered At"

@@ -15,6 +15,9 @@ import {
   FaGlobe,
   FaLightbulb,
   FaCheckCircle,
+  FaEnvelope,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 
 export default function Register() {
@@ -22,13 +25,17 @@ export default function Register() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     district: "",
     mobile: "",
     password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -48,6 +55,12 @@ export default function Register() {
       newErrors.name = t.register.errors.nameRequired;
     }
 
+    if (!formData.email.trim()) {
+      newErrors.email = t.register.errors.emailRequired;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = t.register.errors.emailInvalid;
+    }
+
     if (!formData.district) {
       newErrors.district = t.register.errors.districtRequired;
     }
@@ -62,6 +75,12 @@ export default function Register() {
       newErrors.password = t.register.errors.passwordRequired;
     } else if (formData.password.length < 6) {
       newErrors.password = t.register.errors.passwordMinLength;
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = t.register.errors.confirmPasswordRequired;
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = t.register.errors.passwordMismatch;
     }
 
     setErrors(newErrors);
@@ -87,7 +106,9 @@ export default function Register() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.error === "Mobile number already registered") {
+        if (data.error === "Email already registered") {
+          setErrors({ email: t.register.errors.emailExists });
+        } else if (data.error === "Mobile number already registered") {
           setErrors({ mobile: t.register.errors.mobileExists });
         } else {
           setErrors({ general: data.error || "Registration failed" });
@@ -119,19 +140,19 @@ export default function Register() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
             {t.register.title}
           </h1>
-          <p className="text-xl text-gray-600">{t.register.subtitle}</p>
+          <p className="text-xl text-white">{t.register.subtitle}</p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch">
           {/* Registration Form */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-lg shadow-lg p-8"
+            className="bg-white rounded-lg shadow-lg p-8 flex flex-col"
           >
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name Field */}
@@ -158,6 +179,33 @@ export default function Register() {
                 </div>
                 {errors.name && (
                   <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                )}
+              </div>
+
+              {/* Email Field */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  {t.register.form.email}
+                </label>
+                <div className="relative">
+                  <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder={t.register.form.emailPlaceholder}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
                 )}
               </div>
 
@@ -232,19 +280,60 @@ export default function Register() {
                 <div className="relative">
                   <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     placeholder={t.register.form.passwordPlaceholder}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                    className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.password ? "border-red-500" : "border-gray-300"
                     }`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  {t.register.form.confirmPassword}
+                </label>
+                <div className="relative">
+                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder={t.register.form.confirmPasswordPlaceholder}
+                    className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                      errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                 )}
               </div>
 
@@ -272,13 +361,13 @@ export default function Register() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="space-y-6"
+            className="flex flex-col"
           >
-            <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-lg shadow-lg p-8">
-              <h2 className="text-3xl font-bold mb-6">
+            <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-lg shadow-lg p-8 flex-1 flex flex-col h-full">
+              <h2 className="text-3xl font-bold mb-6 text-white">
                 {t.home.whyChoose.title}
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 {t.home.whyChoose.reasons.map((reason, index) => {
                   const icons = [
                     FaBook,
@@ -298,9 +387,9 @@ export default function Register() {
                       transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
                       className="flex items-start space-x-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm"
                     >
-                      <Icon className="text-2xl flex-shrink-0 mt-1" />
+                      <Icon className="text-2xl flex-shrink-0 mt-1 text-white" />
                       <div>
-                        <h3 className="font-semibold text-lg mb-1">
+                        <h3 className="font-semibold text-lg mb-1 text-white">
                           {reason.title}
                         </h3>
                         <p className="text-white/90 text-sm">
