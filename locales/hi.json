@@ -126,12 +126,17 @@
     "successMessage": "आपका पंजीकरण सफलतापूर्वक हो गया है। होम पर रीडायरेक्ट हो रहा है...",
     "errors": {
       "nameRequired": "नाम आवश्यक है",
+      "emailRequired": "ईमेल आवश्यक है",
+      "emailInvalid": "कृपया एक मान्य ईमेल पता दर्ज करें",
+      "emailExists": "यह ईमेल पहले से पंजीकृत है",
       "districtRequired": "कृपया एक जिला चुनें",
       "mobileRequired": "मोबाइल नंबर आवश्यक है",
       "mobileInvalid": "कृपया एक मान्य 10 अंकों का मोबाइल नंबर दर्ज करें",
       "mobileExists": "यह मोबाइल नंबर पहले से पंजीकृत है",
       "passwordRequired": "पासवर्ड आवश्यक है",
-      "passwordMinLength": "पासवर्ड कम से कम 6 वर्णों का होना चाहिए"
+      "passwordMinLength": "पासवर्ड कम से कम 6 वर्णों का होना चाहिए",
+      "confirmPasswordRequired": "कृपया अपने पासवर्ड की पुष्टि करें",
+      "passwordMismatch": "पासवर्ड मेल नहीं खाते"
     }
   },
   "admin": {

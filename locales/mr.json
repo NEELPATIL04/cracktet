@@ -126,12 +126,17 @@
     "successMessage": "तुमची नोंदणी यशस्वीरित्या पूर्ण झाली आहे. मुख्यपृष्ठावर पुनर्निर्देशित करत आहे...",
     "errors": {
       "nameRequired": "नाव आवश्यक आहे",
+      "emailRequired": "ईमेल आवश्यक आहे",
+      "emailInvalid": "कृपया वैध ईमेल पत्ता प्रविष्ट करा",
+      "emailExists": "हा ईमेल आधीच नोंदणीकृत आहे",
       "districtRequired": "कृपया एक जिल्हा निवडा",
       "mobileRequired": "मोबाईल नंबर आवश्यक आहे",
       "mobileInvalid": "कृपया वैध 10 अंकी मोबाईल नंबर प्रविष्ट करा",
       "mobileExists": "हा मोबाईल नंबर आधीच नोंदणीकृत आहे",
       "passwordRequired": "पासवर्ड आवश्यक आहे",
-      "passwordMinLength": "पासवर्ड किमान 6 वर्णांचा असावा"
+      "passwordMinLength": "पासवर्ड किमान 6 वर्णांचा असावा",
+      "confirmPasswordRequired": "कृपया तुमच्या पासवर्डची पुष्टी करा",
+      "passwordMismatch": "पासवर्ड जुळत नाहीत"
     }
   },
   "admin": {
