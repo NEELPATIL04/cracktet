@@ -8,6 +8,7 @@ const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Please enter a valid email address"),
   district: z.string().min(1, "District is required"),
+  address: z.string().min(1, "Address is required"),
   mobile: z.string().regex(/^\d{10}$/, "Mobile number must be exactly 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
         name: validatedData.name,
         email: validatedData.email,
         district: validatedData.district,
+        address: validatedData.address,
         mobile: validatedData.mobile,
         password: validatedData.password, // In production, hash this password!
       })

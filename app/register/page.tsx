@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   FaUser,
   FaMapMarkerAlt,
+  FaHome,
   FaPhone,
   FaLock,
   FaBook,
@@ -27,6 +28,7 @@ export default function Register() {
     name: "",
     email: "",
     district: "",
+    address: "",
     mobile: "",
     password: "",
     confirmPassword: "",
@@ -63,6 +65,10 @@ export default function Register() {
 
     if (!formData.district) {
       newErrors.district = t.register.errors.districtRequired;
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = t.register.errors.addressRequired;
     }
 
     if (!formData.mobile) {
@@ -238,6 +244,33 @@ export default function Register() {
                 </div>
                 {errors.district && (
                   <p className="text-red-500 text-sm mt-1">{errors.district}</p>
+                )}
+              </div>
+
+              {/* Address Field */}
+              <div>
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  {t.register.form.address}
+                </label>
+                <div className="relative">
+                  <FaHome className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder={t.register.form.addressPlaceholder}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                      errors.address ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                </div>
+                {errors.address && (
+                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
                 )}
               </div>
 

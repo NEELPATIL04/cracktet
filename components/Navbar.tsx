@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { FaGraduationCap } from "react-icons/fa";
 import { MdLanguage } from "react-icons/md";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -22,18 +22,22 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
             <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+              className="relative h-20 w-56"
             >
-              <FaGraduationCap className="text-3xl text-primary" />
+              <Image
+                src="/images/logo.png"
+                alt="CrackTET Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </motion.div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-              CrackTET
-            </span>
           </Link>
 
           {/* Navigation Links */}

@@ -11,6 +11,7 @@ interface User {
   name: string;
   email: string;
   district: string;
+  address: string;
   mobile: string;
   createdAt: string;
 }
@@ -213,6 +214,9 @@ export default function Admin() {
                       {t.admin.table.district}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">
+                      {t.admin.table.address}
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
                       {t.admin.table.mobile}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -243,6 +247,9 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {user.district}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {user.address}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {user.mobile}
@@ -305,6 +312,14 @@ export default function Admin() {
                       </span>
                       <span className="text-gray-900 font-medium">
                         {user.district}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        {t.admin.table.address}:
+                      </span>
+                      <span className="text-gray-900 font-medium">
+                        {user.address}
                       </span>
                     </div>
                     <div className="flex justify-between">

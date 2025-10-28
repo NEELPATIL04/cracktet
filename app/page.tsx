@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBook,
   FaUsers,
@@ -16,105 +16,92 @@ import {
 } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-const slides = [
-  {
-    image: "/images/slide1.jpg",
-    title: "Master the TET Exam",
-    description: "Comprehensive preparation for Maharashtra Teacher Eligibility Test",
-  },
-  {
-    image: "/images/slide2.jpg",
-    title: "Expert Study Materials",
-    description: "Access quality resources curated by experienced educators",
-  },
-  {
-    image: "/images/slide3.jpg",
-    title: "Practice with Mock Tests",
-    description: "Simulate real exam environment and boost your confidence",
-  },
-];
+import Image from "next/image";
 
 export default function Home() {
   const { t } = useLanguage();
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [showLogo, setShowLogo] = useState(true);
+  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
+    // Hide logo after 2 seconds and show content
+    const logoTimer = setTimeout(() => {
+      setShowLogo(false);
+      setShowContent(true);
+    }, 2000);
+
+    return () => clearTimeout(logoTimer);
   }, []);
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden">
-      {/* Hero Slideshow */}
-      <section className="relative h-[500px] w-full overflow-hidden bg-secondary-gray">
-        {/* Slideshow Background */}
-        <div className="absolute inset-0">
-          {slides.map((slide, index) => (
+      {/* Logo Animation */}
+      <AnimatePresence>
+        {showLogo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-white"
+          >
             <motion.div
-              key={index}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: currentSlide === index ? 0.3 : 0 }}
-              transition={{ duration: 1 }}
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: `url(${slide.image})`,
-                display: currentSlide === index ? "block" : "none",
-              }}
-            />
-          ))}
-        </div>
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.2, opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="relative w-80 h-80"
+            >
+              <Image
+                src="/images/logo.png"
+                alt="CrackTET Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hero Section */}
+      <section className="relative h-[500px] w-full overflow-hidden bg-gradient-to-br from-[#8CC63F] to-[#6FA030]">
 
         {/* Hero Content */}
-        <div className="relative z-10 h-full flex items-center justify-center text-white">
-          <div className="text-center px-4 max-w-4xl mx-auto">
-            <motion.h1
-              key={currentSlide}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-5xl md:text-6xl font-bold mb-4 text-white"
-            >
-              {t.home.hero.title}
-            </motion.h1>
-            <motion.p
-              key={`subtitle-${currentSlide}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-xl md:text-2xl mb-8 text-white"
-            >
-              {t.home.hero.subtitle}
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              <Link
-                href="/register"
-                className="inline-block bg-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-dark transition-colors shadow-lg"
+        {showContent && (
+          <div className="relative z-10 h-full flex items-center justify-center text-white">
+            <div className="text-center px-4 max-w-4xl mx-auto">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className="text-5xl md:text-6xl font-bold mb-4 text-white"
               >
-                {t.navbar.register}
-              </Link>
-            </motion.div>
+                {t.home.hero.title}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-xl md:text-2xl mb-8 text-white"
+              >
+                {t.home.hero.subtitle}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                <Link
+                  href="/register"
+                  className="inline-block bg-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-dark transition-colors shadow-lg"
+                >
+                  {t.navbar.register}
+                </Link>
+              </motion.div>
+            </div>
           </div>
-        </div>
-
-        {/* Slide Indicators */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                currentSlide === index ? "bg-white w-8" : "bg-white/50"
-              }`}
-            />
-          ))}
-        </div>
+        )}
       </section>
 
       {/* About TET Exam Section */}
@@ -159,21 +146,21 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12"
           >
-            <div className="text-center p-6 bg-secondary-gray rounded-lg">
-              <FaPenFancy className="text-5xl text-primary mx-auto mb-3" />
-              <p className="font-semibold">150 MCQs</p>
+            <div className="text-center p-6 bg-[#00A9E0] rounded-lg shadow-lg">
+              <FaPenFancy className="text-5xl text-white mx-auto mb-3" />
+              <p className="font-semibold text-white">150 MCQs</p>
             </div>
-            <div className="text-center p-6 bg-secondary-gray rounded-lg">
-              <FaClock className="text-5xl text-primary mx-auto mb-3" />
-              <p className="font-semibold">2.5 Hours</p>
+            <div className="text-center p-6 bg-[#F4B41A] rounded-lg shadow-lg">
+              <FaClock className="text-5xl text-white mx-auto mb-3" />
+              <p className="font-semibold text-white">2.5 Hours</p>
             </div>
-            <div className="text-center p-6 bg-secondary-gray rounded-lg">
-              <FaClipboardList className="text-5xl text-primary mx-auto mb-3" />
-              <p className="font-semibold">2 Papers</p>
+            <div className="text-center p-6 bg-[#8CC63F] rounded-lg shadow-lg">
+              <FaClipboardList className="text-5xl text-white mx-auto mb-3" />
+              <p className="font-semibold text-white">2 Papers</p>
             </div>
-            <div className="text-center p-6 bg-secondary-gray rounded-lg">
-              <FaCertificate className="text-5xl text-primary mx-auto mb-3" />
-              <p className="font-semibold">Lifetime Valid</p>
+            <div className="text-center p-6 bg-[#00A9E0] rounded-lg shadow-lg">
+              <FaCertificate className="text-5xl text-white mx-auto mb-3" />
+              <p className="font-semibold text-white">Lifetime Valid</p>
             </div>
           </motion.div>
         </div>
@@ -209,7 +196,7 @@ export default function Home() {
                 className="bg-white p-6 rounded-lg shadow-lg"
               >
                 <div className="flex items-start space-x-3">
-                  <FaCheckCircle className="text-primary text-xl flex-shrink-0 mt-1" />
+                  <FaCheckCircle className="text-[#8CC63F] text-xl flex-shrink-0 mt-1" />
                   <p className="text-gray-700">{feature}</p>
                 </div>
               </motion.div>
@@ -245,6 +232,14 @@ export default function Home() {
               ];
               const Icon = icons[index % icons.length];
 
+              // Alternate between logo colors
+              const colors = [
+                "bg-[#00A9E0]", // Blue
+                "bg-[#F4B41A]", // Gold
+                "bg-[#8CC63F]", // Green
+              ];
+              const bgColor = colors[index % colors.length];
+
               return (
                 <motion.div
                   key={index}
@@ -253,14 +248,9 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ scale: 1.05 }}
-                  className="bg-secondary-gray text-white p-6 rounded-lg shadow-lg border border-white/20"
+                  className={`${bgColor} text-white p-6 rounded-lg shadow-lg`}
                 >
-                  {/* <motion.div
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.6 }}
-                  > */}
                     <Icon className="text-5xl mb-4 text-white" />
-                  {/* </motion.div> */}
                   <h3 className="text-xl font-bold mb-2 text-white">{reason.title}</h3>
                   <p className="text-white">{reason.description}</p>
                 </motion.div>
