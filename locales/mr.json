@@ -73,12 +73,16 @@
     "form": {
       "name": "पूर्ण नाव",
       "namePlaceholder": "तुमचे पूर्ण नाव प्रविष्ट करा",
+      "email": "ईमेल पत्ता",
+      "emailPlaceholder": "तुमचा ईमेल पत्ता प्रविष्ट करा",
       "district": "जिल्हा",
       "districtPlaceholder": "तुमचा जिल्हा निवडा",
       "mobile": "मोबाईल नंबर",
       "mobilePlaceholder": "10 अंकी मोबाईल नंबर प्रविष्ट करा",
       "password": "पासवर्ड",
       "passwordPlaceholder": "एक मजबूत पासवर्ड तयार करा",
+      "confirmPassword": "पासवर्डची पुष्टी करा",
+      "confirmPasswordPlaceholder": "तुमचा पासवर्ड पुन्हा प्रविष्ट करा",
       "submit": "आता नोंदणी करा"
     },
     "districts": [
