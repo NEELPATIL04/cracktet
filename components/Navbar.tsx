@@ -20,9 +20,9 @@ export default function Navbar() {
   ];
 
   const t = {
-    en: { home: "Home", register: "Register", language: "Language" },
-    hi: { home: "होम", register: "पंजीकरण", language: "भाषा" },
-    mr: { home: "मुख्यपृष्ठ", register: "नोंदणी", language: "भाषा" },
+    en: { home: "Home", courses: "Courses", register: "Register", language: "Language" },
+    hi: { home: "होम", courses: "कोर्स", register: "पंजीकरण", language: "भाषा" },
+    mr: { home: "मुख्यपृष्ठ", courses: "अभ्यासक्रम", register: "नोंदणी", language: "भाषा" },
   };
 
   const translations = t[language as keyof typeof t] || t.en;
@@ -91,6 +91,17 @@ export default function Navbar() {
               }`}
             >
               {translations.home}
+            </Link>
+
+            <Link
+              href="#"
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === "/courses"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-700 hover:text-blue-600"
+              }`}
+            >
+              {translations.courses}
             </Link>
             
             <Link href="/register">
@@ -225,6 +236,18 @@ export default function Navbar() {
                   }`}
                 >
                   {translations.home}
+                </Link>
+
+                <Link
+                  href="#"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                    pathname === "/courses"
+                      ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {translations.courses}
                 </Link>
 
                 <div className="px-4 pt-3 border-t border-gray-200">

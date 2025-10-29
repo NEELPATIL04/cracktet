@@ -96,10 +96,11 @@ export default function PaymentModal({
 
           if (verifyResponse.ok) {
             setPaymentStatus("success");
+            
+            // Redirect to payment status page for polling
             setTimeout(() => {
-              onSuccess();
-              onClose();
-            }, 2000);
+              window.location.href = `/payment-status/${response.razorpay_order_id}`;
+            }, 1500);
           } else {
             throw new Error("Payment verification failed");
           }

@@ -22,16 +22,39 @@ export default function Home() {
   const { t } = useLanguage();
   const [showLogo, setShowLogo] = useState(true);
   const [showContent, setShowContent] = useState(false);
+  const [showHeroSlideshow, setShowHeroSlideshow] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+
+  const slides = [
+    { type: "text", content: { title: t.home.hero.title, subtitle: t.home.hero.subtitle } },
+    { type: "logo", src: "/images/circle-logo.jpeg", alt: "CrackTET Circle Logo" },
+    { type: "text", content: { title: t.home.hero.title, subtitle: t.home.hero.subtitle } },
+    { type: "logo", src: "/images/logo.png", alt: "CrackTET Logo" },
+    { type: "text", content: { title: t.home.hero.title, subtitle: t.home.hero.subtitle } },
+    { type: "logo", src: "/images/cracktet-logo.png", alt: "CrackTET Brand Logo" },
+  ];
 
   useEffect(() => {
-    // Hide logo after 2 seconds and show content
+    // Hide initial logo after 2 seconds and show content
     const logoTimer = setTimeout(() => {
       setShowLogo(false);
       setShowContent(true);
+      setShowHeroSlideshow(true);
     }, 2000);
 
     return () => clearTimeout(logoTimer);
   }, []);
+
+  useEffect(() => {
+    // Text and Logo slideshow in hero section
+    if (showHeroSlideshow) {
+      const slideInterval = setInterval(() => {
+        setCurrentSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
+      }, 3000); // Change slide every 3 seconds
+
+      return () => clearInterval(slideInterval);
+    }
+  }, [showHeroSlideshow, slides.length]);
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden">
@@ -71,26 +94,47 @@ export default function Home() {
         {showContent && (
           <div className="relative z-10 h-full flex items-center justify-center text-white px-4">
             <div className="text-center max-w-4xl mx-auto">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white"
-              >
-                {t.home.hero.title}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-white"
-              >
-                {t.home.hero.subtitle}
-              </motion.p>
+              {/* Hero Slideshow (Text and Logos) */}
+              <AnimatePresence mode="wait">
+                {showHeroSlideshow && (
+                  <motion.div
+                    key={currentSlideIndex}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                    className="mb-6 flex justify-center items-center min-h-[300px]"
+                  >
+                    {slides[currentSlideIndex].type === "text" ? (
+                      <div className="text-center">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white">
+                          {slides[currentSlideIndex].content.title}
+                        </h1>
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white">
+                          {slides[currentSlideIndex].content.subtitle}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56">
+                        <Image
+                          src={slides[currentSlideIndex].src}
+                          alt={slides[currentSlideIndex].alt}
+                          fill
+                          className="object-contain drop-shadow-2xl"
+                          priority
+                          quality={100}
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Register Button - always show when content is visible */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
               >
                 <Link
                   href="/register"
