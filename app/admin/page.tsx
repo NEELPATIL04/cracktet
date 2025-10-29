@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaUsers, FaSpinner, FaSignOutAlt, FaTrash } from "react-icons/fa";
+import { FaUsers, FaSpinner, FaSignOutAlt, FaTrash, FaCog, FaRupeeSign } from "react-icons/fa";
 
 interface User {
   id: number;
@@ -14,6 +14,9 @@ interface User {
   address: string;
   mobile: string;
   createdAt: string;
+  paymentStatus: string;
+  paymentAmount: string | null;
+  paymentCompletedAt: string | null;
 }
 
 export default function Admin() {
@@ -25,10 +28,20 @@ export default function Admin() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState("");
   const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [registrationFee, setRegistrationFee] = useState(2500);
+  const [newFee, setNewFee] = useState("");
+  const [isUpdatingFee, setIsUpdatingFee] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSettings();
+    }
+  }, [isAuthenticated]);
 
   const checkAuth = async () => {
     try {
@@ -44,6 +57,49 @@ export default function Admin() {
       router.push("/admin/login");
     } finally {
       setIsCheckingAuth(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch("/api/admin/settings");
+      if (response.ok) {
+        const data = await response.json();
+        setRegistrationFee(data.registrationFee);
+        setNewFee(data.registrationFee.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+  };
+
+  const handleUpdateFee = async () => {
+    const fee = parseFloat(newFee);
+    if (isNaN(fee) || fee <= 0) {
+      alert("Please enter a valid fee amount");
+      return;
+    }
+
+    setIsUpdatingFee(true);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationFee: fee }),
+      });
+
+      if (response.ok) {
+        setRegistrationFee(fee);
+        alert("Registration fee updated successfully!");
+        setShowSettings(false);
+      } else {
+        throw new Error("Failed to update fee");
+      }
+    } catch (error) {
+      console.error("Error updating fee:", error);
+      alert("Failed to update registration fee");
+    } finally {
+      setIsUpdatingFee(false);
     }
   };
 
@@ -132,6 +188,59 @@ export default function Admin() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-secondary-gray py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        {/* Settings Modal */}
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSettings(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-lg p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold mb-4 flex items-center">
+                <FaCog className="mr-2" /> Admin Settings
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Registration Fee (₹)
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="number"
+                      value={newFee}
+                      onChange={(e) => setNewFee(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                      placeholder="Enter fee amount"
+                    />
+                    <button
+                      onClick={handleUpdateFee}
+                      disabled={isUpdatingFee}
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
+                    >
+                      {isUpdatingFee ? <FaSpinner className="animate-spin" /> : "Update"}
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Current fee: ₹{registrationFee}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="mt-6 w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* Header with Logout */}
         <div className="flex justify-between items-center mb-12">
           <motion.div
@@ -149,18 +258,32 @@ export default function Admin() {
             <p className="text-xl text-gray-600">{t.admin.subtitle}</p>
           </motion.div>
 
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleLogout}
-            className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"
-          >
-            <FaSignOutAlt />
-            <span>Logout</span>
-          </motion.button>
+          <div className="flex space-x-3">
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowSettings(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg"
+            >
+              <FaCog />
+              <span>Settings</span>
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"
+            >
+              <FaSignOutAlt />
+              <span>Logout</span>
+            </motion.button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -220,6 +343,9 @@ export default function Admin() {
                       {t.admin.table.mobile}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Payment Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
                       {t.admin.table.registeredAt}
                     </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold">
@@ -253,6 +379,18 @@ export default function Admin() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {user.mobile}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                          user.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                          user.paymentStatus === 'initiated' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {user.paymentStatus === 'completed' && <FaRupeeSign className="mr-1" />}
+                          {user.paymentStatus || 'pending'}
+                          {user.paymentAmount && user.paymentStatus === 'completed' && ` (₹${user.paymentAmount})`}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {formatDate(user.createdAt)}
@@ -328,6 +466,20 @@ export default function Admin() {
                       </span>
                       <span className="text-gray-900 font-medium">
                         {user.mobile}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">
+                        Payment:
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                        user.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                        user.paymentStatus === 'initiated' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {user.paymentStatus === 'completed' && <FaRupeeSign className="mr-1" />}
+                        {user.paymentStatus || 'pending'}
                       </span>
                     </div>
                     <div className="flex justify-between">

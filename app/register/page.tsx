@@ -2,8 +2,9 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import PaymentModal from "@/components/PaymentModal";
 import {
   FaUser,
   FaMapMarkerAlt,
@@ -19,6 +20,7 @@ import {
   FaEnvelope,
   FaEye,
   FaEyeSlash,
+  FaRupeeSign,
 } from "react-icons/fa";
 
 export default function Register() {
@@ -38,6 +40,21 @@ export default function Register() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [registeredUserId, setRegisteredUserId] = useState<number | null>(null);
+  const [registrationFee, setRegistrationFee] = useState(2500);
+
+  useEffect(() => {
+    // Fetch registration fee from settings
+    fetch('/api/admin/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.registrationFee) {
+          setRegistrationFee(data.registrationFee);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -122,13 +139,9 @@ export default function Register() {
         return;
       }
 
-      // Show success popup
-      setShowSuccess(true);
-
-      // Redirect to home after 2 seconds
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
+      // Store user ID and show payment modal
+      setRegisteredUserId(data.user.id);
+      setShowPaymentModal(true);
     } catch (error) {
       console.error("Registration error:", error);
       setErrors({ general: "An error occurred. Please try again." });
@@ -370,6 +383,20 @@ export default function Register() {
                 )}
               </div>
 
+              {/* Registration Fee Info */}
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium">Registration Fee:</span>
+                  <span className="text-xl font-bold text-primary flex items-center">
+                    <FaRupeeSign className="mr-1" />
+                    {registrationFee}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Payment will be processed after registration
+                </p>
+              </div>
+
               {/* Submit Button */}
               <motion.button
                 type="submit"
@@ -380,7 +407,7 @@ export default function Register() {
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                {isLoading ? "Registering..." : t.register.form.submit}
+                {isLoading ? "Registering..." : `${t.register.form.submit} & Pay ₹${registrationFee}`}
               </motion.button>
 
               {errors.general && (
@@ -437,6 +464,22 @@ export default function Register() {
           </motion.div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        userId={registeredUserId || undefined}
+        userName={formData.name}
+        userMobile={formData.mobile}
+        registrationFee={registrationFee}
+        onSuccess={() => {
+          setShowSuccess(true);
+          setTimeout(() => {
+            router.push("/");
+          }, 2000);
+        }}
+      />
 
       {/* Success Popup */}
       {showSuccess && (

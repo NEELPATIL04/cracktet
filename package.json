@@ -12,12 +12,14 @@
     "seed:admin": "tsx scripts/seed-admin.ts"
   },
   "dependencies": {
+    "crypto": "^1.0.1",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.38.3",
     "framer-motion": "^11.15.0",
     "next": "^15.1.3",
     "next-intl": "^3.23.0",
     "postgres": "^3.4.5",
+    "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
