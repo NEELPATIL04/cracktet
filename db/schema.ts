@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   address: varchar("address", { length: 500 }).default("").notNull(),
   mobile: varchar("mobile", { length: 15 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
   paymentStatus: varchar("payment_status", { length: 50 }).default("pending").notNull(),
   paymentAmount: decimal("payment_amount", { precision: 10, scale: 2 }),
   razorpayOrderId: varchar("razorpay_order_id", { length: 255 }),
@@ -48,6 +49,19 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const resources = pgTable("resources", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileSize: varchar("file_size", { length: 50 }),
+  uploadedBy: serial("uploaded_by").references(() => admins.id).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Admin = typeof admins.$inferSelect;
@@ -56,3 +70,5 @@ export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
+export type Resource = typeof resources.$inferSelect;
+export type NewResource = typeof resources.$inferInsert;
