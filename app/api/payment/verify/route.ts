@@ -35,7 +35,13 @@ export async function POST(request: NextRequest) {
     // Check if this is a new registration (has registrationFlow flag)
     if (order.notes && order.notes.registrationFlow === 'true') {
       // Create new user after successful payment
-      const { name, email, district, address, mobile, password } = order.notes;
+      const notes = order.notes as Record<string, string>;
+      const name = String(notes.name);
+      const email = String(notes.email);
+      const district = String(notes.district);
+      const address = String(notes.address);
+      const mobile = String(notes.mobile);
+      const password = String(notes.password);
 
       const newUser = await db
         .insert(users)
@@ -50,7 +56,7 @@ export async function POST(request: NextRequest) {
           razorpayOrderId: razorpay_order_id,
           razorpayPaymentId: razorpay_payment_id,
           razorpaySignature: razorpay_signature,
-          paymentAmount: (order.amount / 100).toString(),
+          paymentAmount: (Number(order.amount) / 100).toString(),
           paymentCompletedAt: new Date(),
         })
         .returning();

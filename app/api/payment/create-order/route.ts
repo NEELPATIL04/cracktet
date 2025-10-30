@@ -8,7 +8,7 @@ import { eq, or } from 'drizzle-orm';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, mobile, name, registrationData } = body;
+    const { userId, mobile, registrationData } = body;
 
     // Handle new registration flow (with registrationData)
     if (registrationData) {
