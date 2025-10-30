@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyRazorpaySignature } from '@/lib/razorpay';
+import { verifyRazorpaySignature, razorpayInstance } from '@/lib/razorpay';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -29,6 +29,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch order details from Razorpay to get notes
+    const order = await razorpayInstance.orders.fetch(razorpay_order_id);
+
+    // Check if this is a new registration (has registrationFlow flag)
+    if (order.notes && order.notes.registrationFlow === 'true') {
+      // Create new user after successful payment
+      const { name, email, district, address, mobile, password } = order.notes;
+
+      const newUser = await db
+        .insert(users)
+        .values({
+          name,
+          email,
+          district,
+          address,
+          mobile,
+          password, // In production, hash this password!
+          paymentStatus: 'completed',
+          razorpayOrderId: razorpay_order_id,
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+          paymentAmount: (order.amount / 100).toString(),
+          paymentCompletedAt: new Date(),
+        })
+        .returning();
+
+      return NextResponse.json({
+        success: true,
+        message: 'Payment verified and registration completed successfully',
+        user: {
+          id: newUser[0].id,
+          name: newUser[0].name,
+          mobile: newUser[0].mobile,
+          paymentStatus: 'completed',
+        },
+      });
+    }
+
+    // Handle existing user payment flow (legacy)
     // Find user by order ID
     const userResult = await db
       .select()

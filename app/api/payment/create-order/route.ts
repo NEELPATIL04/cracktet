@@ -3,12 +3,72 @@ import { razorpayInstance } from '@/lib/razorpay';
 import { getRegistrationFee } from '@/lib/settings';
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, mobile, name } = await request.json();
+    const body = await request.json();
+    const { userId, mobile, name, registrationData } = body;
 
+    // Handle new registration flow (with registrationData)
+    if (registrationData) {
+      const { name, email, district, address, mobile, password } = registrationData;
+
+      if (!name || !email || !mobile) {
+        return NextResponse.json(
+          { error: 'Name, email, and mobile are required' },
+          { status: 400 }
+        );
+      }
+
+      // Double-check if user already exists
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(
+          or(
+            eq(users.email, email),
+            eq(users.mobile, mobile)
+          )
+        )
+        .limit(1);
+
+      if (existingUser.length > 0) {
+        return NextResponse.json(
+          { error: 'Email or mobile number already registered' },
+          { status: 400 }
+        );
+      }
+
+      // Get registration fee from settings
+      const registrationFee = await getRegistrationFee();
+      const amountInPaise = registrationFee * 100;
+
+      // Create Razorpay order with registration data in notes
+      const order = await razorpayInstance.orders.create({
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt: `reg_new_${Date.now()}`,
+        notes: {
+          name,
+          email,
+          district,
+          address,
+          mobile,
+          password, // Store temporarily, will be used after payment
+          registrationFlow: 'true',
+        },
+      });
+
+      return NextResponse.json({
+        orderId: order.id,
+        amount: registrationFee,
+        currency: 'INR',
+        keyId: process.env.RAZORPAY_KEY_ID,
+      });
+    }
+
+    // Handle existing user payment flow (legacy)
     if (!userId && !mobile) {
       return NextResponse.json(
         { error: 'User ID or mobile number is required' },
@@ -51,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     // Get registration fee from settings
     const registrationFee = await getRegistrationFee();
-    const amountInPaise = registrationFee * 100; // Razorpay expects amount in paise
+    const amountInPaise = registrationFee * 100;
 
     // Create Razorpay order
     const order = await razorpayInstance.orders.create({
@@ -83,7 +143,7 @@ export async function POST(request: NextRequest) {
       user: {
         name: user.name,
         mobile: user.mobile,
-        email: user.email, // Use actual user email
+        email: user.email,
       },
     });
   } catch (error) {

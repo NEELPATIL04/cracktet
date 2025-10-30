@@ -27,11 +27,7 @@ export default function Home() {
 
   const slides = [
     { type: "text", content: { title: t.home.hero.title, subtitle: t.home.hero.subtitle } },
-    { type: "logo", src: "/images/circle-logo.jpeg", alt: "CrackTET Circle Logo" },
-    { type: "text", content: { title: t.home.hero.title, subtitle: t.home.hero.subtitle } },
-    { type: "logo", src: "/images/logo.png", alt: "CrackTET Logo" },
-    { type: "text", content: { title: t.home.hero.title, subtitle: t.home.hero.subtitle } },
-    { type: "logo", src: "/images/cracktet-logo.png", alt: "CrackTET Brand Logo" },
+    { type: "logoPatch", content: null },
   ];
 
   useEffect(() => {
@@ -94,7 +90,7 @@ export default function Home() {
         {showContent && (
           <div className="relative z-10 h-full flex items-center justify-center text-white px-4">
             <div className="text-center max-w-4xl mx-auto">
-              {/* Hero Slideshow (Text and Logos) */}
+              {/* Hero Slideshow (Text and Logo Patch) */}
               <AnimatePresence mode="wait">
                 {showHeroSlideshow && (
                   <motion.div
@@ -103,29 +99,61 @@ export default function Home() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.6, ease: "easeInOut" }}
-                    className="mb-6 flex justify-center items-center min-h-[300px]"
+                    className="mb-4 flex justify-center items-center min-h-[250px] sm:min-h-[280px] md:min-h-[300px]"
                   >
                     {slides[currentSlideIndex].type === "text" ? (
                       <div className="text-center">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white">
-                          {slides[currentSlideIndex].content.title}
+                          {slides[currentSlideIndex].content?.title}
                         </h1>
                         <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white">
-                          {slides[currentSlideIndex].content.subtitle}
+                          {slides[currentSlideIndex].content?.subtitle}
                         </p>
                       </div>
-                    ) : (
-                      <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56">
-                        <Image
-                          src={slides[currentSlideIndex].src}
-                          alt={slides[currentSlideIndex].alt}
-                          fill
-                          className="object-contain drop-shadow-2xl"
-                          priority
-                          quality={100}
-                        />
+                    ) : slides[currentSlideIndex].type === "logoPatch" ? (
+                      <div className="flex items-center justify-center space-x-4 sm:space-x-6 md:space-x-8">
+                        {/* Circular Logo */}
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.3 }}
+                          className="relative flex-shrink-0"
+                        >
+                          <div className="h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 lg:h-56 lg:w-56 rounded-full flex items-center justify-center bg-white overflow-hidden shadow-2xl">
+                            <div className="relative h-full w-full">
+                              <Image
+                                src="/images/circle-logo.jpeg"
+                                alt="CrackTET Logo"
+                                fill
+                                className="object-cover rounded-full"
+                                priority
+                                quality={100}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Vertical Separator */}
+                        <div className="h-24 sm:h-32 md:h-40 lg:h-48 w-1 sm:w-1.5 bg-white self-center shadow-lg"></div>
+
+                        {/* Rectangular Logo */}
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex items-center justify-center relative self-center"
+                        >
+                          <div className="relative h-24 w-[200px] sm:h-32 sm:w-[240px] md:h-40 md:w-[320px] lg:h-48 lg:w-[400px]">
+                            <Image
+                              src="/images/cracktet-logo.png"
+                              alt="CrackTET"
+                              fill
+                              className="object-contain drop-shadow-2xl"
+                              priority
+                              quality={100}
+                            />
+                          </div>
+                        </motion.div>
                       </div>
-                    )}
+                    ) : null}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -276,13 +304,8 @@ export default function Home() {
               ];
               const Icon = icons[index % icons.length];
 
-              // Alternate between logo colors
-              const colors = [
-                "bg-[#00A9E0]", // Blue
-                "bg-[#F4B41A]", // Gold
-                "bg-[#8CC63F]", // Green
-              ];
-              const bgColor = colors[index % colors.length];
+              // Zigzag pattern: alternate between blue and green
+              const bgColor = index % 2 === 0 ? "bg-[#00A9E0]" : "bg-[#8CC63F]"; // Blue and Green
 
               return (
                 <motion.div

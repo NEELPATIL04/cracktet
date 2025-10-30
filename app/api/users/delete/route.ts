@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, transactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 
@@ -28,7 +28,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete the user
+    // First, delete associated transactions (if any)
+    await db
+      .delete(transactions)
+      .where(eq(transactions.userId, userId));
+
+    // Then delete the user
     const deletedUser = await db
       .delete(users)
       .where(eq(users.id, userId))

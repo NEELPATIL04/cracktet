@@ -41,12 +41,11 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [registeredUserId, setRegisteredUserId] = useState<number | null>(null);
   const [registrationFee, setRegistrationFee] = useState(2500);
 
   useEffect(() => {
     // Fetch registration fee from settings
-    fetch('/api/admin/settings')
+    fetch('/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data.registrationFee) {
@@ -118,32 +117,35 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/register", {
+      // Check if email or mobile already exists before proceeding to payment
+      const checkResponse = await fetch("/api/check-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          mobile: formData.mobile,
+        }),
       });
 
-      const data = await response.json();
+      const checkData = await checkResponse.json();
 
-      if (!response.ok) {
-        if (data.error === "Email already registered") {
+      if (!checkResponse.ok) {
+        if (checkData.field === "email") {
           setErrors({ email: t.register.errors.emailExists });
-        } else if (data.error === "Mobile number already registered") {
+        } else if (checkData.field === "mobile") {
           setErrors({ mobile: t.register.errors.mobileExists });
         } else {
-          setErrors({ general: data.error || "Registration failed" });
+          setErrors({ general: checkData.error || "Validation failed" });
         }
         return;
       }
 
-      // Store user ID and show payment modal
-      setRegisteredUserId(data.user.id);
+      // Proceed to payment modal without creating user
       setShowPaymentModal(true);
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Validation error:", error);
       setErrors({ general: "An error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -469,9 +471,7 @@ export default function Register() {
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        userId={registeredUserId || undefined}
-        userName={formData.name}
-        userMobile={formData.mobile}
+        registrationData={formData}
         registrationFee={registrationFee}
         onSuccess={() => {
           setShowSuccess(true);

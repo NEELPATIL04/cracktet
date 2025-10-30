@@ -10,12 +10,20 @@ declare global {
   }
 }
 
+interface RegistrationData {
+  name: string;
+  email: string;
+  district: string;
+  address: string;
+  mobile: string;
+  password: string;
+  confirmPassword: string;
+}
+
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId?: number;
-  userName: string;
-  userMobile: string;
+  registrationData: RegistrationData;
   registrationFee: number;
   onSuccess: () => void;
 }
@@ -23,9 +31,7 @@ interface PaymentModalProps {
 export default function PaymentModal({
   isOpen,
   onClose,
-  userId,
-  userName,
-  userMobile,
+  registrationData,
   registrationFee,
   onSuccess,
 }: PaymentModalProps) {
@@ -50,11 +56,20 @@ export default function PaymentModal({
     setError("");
 
     try {
-      // Create order
+      // Create order with registration data
       const orderResponse = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, mobile: userMobile, name: userName }),
+        body: JSON.stringify({
+          registrationData: {
+            name: registrationData.name,
+            email: registrationData.email,
+            district: registrationData.district,
+            address: registrationData.address,
+            mobile: registrationData.mobile,
+            password: registrationData.password,
+          }
+        }),
       });
 
       if (!orderResponse.ok) {
@@ -73,17 +88,17 @@ export default function PaymentModal({
         description: "Registration Fee",
         order_id: orderData.orderId,
         prefill: {
-          name: userName,
-          contact: userMobile,
-          email: orderData.user.email,
+          name: registrationData.name,
+          contact: registrationData.mobile,
+          email: registrationData.email,
         },
         theme: {
           color: "#F37254",
         },
         handler: async function (response: any) {
           setPaymentStatus("processing");
-          
-          // Verify payment
+
+          // Verify payment and create user
           const verifyResponse = await fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -96,10 +111,10 @@ export default function PaymentModal({
 
           if (verifyResponse.ok) {
             setPaymentStatus("success");
-            
-            // Redirect to payment status page for polling
+
+            // Call onSuccess to show success message
             setTimeout(() => {
-              window.location.href = `/payment-status/${response.razorpay_order_id}`;
+              onSuccess();
             }, 1500);
           } else {
             throw new Error("Payment verification failed");
