@@ -42,6 +42,8 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [registrationFee, setRegistrationFee] = useState(2500);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [popupLanguage, setPopupLanguage] = useState<'en' | 'mr'>('en');
 
   useEffect(() => {
     // Fetch registration fee from settings
@@ -152,8 +154,141 @@ export default function Register() {
     }
   };
 
+  const welcomeContent = {
+    en: {
+      title: "For All TET Aspirants",
+      content: `As you stand on the very threshold of becoming a teacher We, on behalf of our institution, are conducting this special initiative to help you achieve complete success in the TET / TAIT examination.
+
+CRACKTET is a simple, easy-to-understand, and affordable coaching program designed especially for all aspirants.
+
+>> While preparing for the examination, you will be guided through everything you need to know about the TET / TAIT exams.
+
+>> Our key objective is to help you overcome exam-related fear and approach the test with complete confidence and composure.
+
+What will you get through our coaching ?
+
+■ In just 20 days, you will gain complete online knowledge and understanding of the TET / TAIT syllabus.
+
+■ You will get 15+ online practice question papers covering all five subjects of examination.
+
+■ Model answer sheets and additional online guidance related to the TET / TAIT syllabus will be provided.
+
+■ You will get one exclusive interactive video session on how to Face the TET / TAIT examination.
+
+■ Separate subject wise five expert-guided video sessions, will be included.
+
+■ This initiative is designed to make the TET / TAIT exam simple, clear, and easily manageable. Helping you become more capable, and confident. We are sure you will find this program truly beneficial.
+
+Hope you've understood everything clearly...
+
+Would you like to join our short-term yet highly effective and success-oriented initiative that offers rich, valuable guidance for the TET / TAIT examination and ensures outstanding results?`
+    },
+    mr: {
+      title: "सर्व परीक्षार्थी उमेदवारांना...",
+      content: `आपण शिक्षक होण्याच्या अगदी उंबरठ्यावर असताना आपणास TET /TAIT या परीक्षेमध्ये परिपूर्ण यश मिळावे म्हणून आमच्या संस्थेच्या वतीने आम्ही हा खास उपक्रम राबवत आहोत.
+
+CRACKTET हा अतिशय महत्त्वाकांक्षी आणि सर्व परीक्षार्थी यांच्यासाठी अत्यंत सोपा सुटसुटीत कमी व सुलभ शुल्कात एक कोचिंग प्रकार आहे.
+
+>> परीक्षेला सामोरे जाताना TET /TAIT परीक्षेबाबत आपणांस सर्वकाही अवगत करून दिले जाईल.
+
+>> आपल्या मनातील भीती नाहीसी व्हावी व आपण अत्यंत आत्मविश्वास आणि संयमाने या परीक्षेकडे पाहावे हा आमच्या संस्थेचा महत्त्वाचा उद्देश आहे.
+
+आमच्या कोचिंगमधून आम्ही आपणांस काय देऊ...?
+
+■ TET /TAIT परीक्षेचे अवघ्या वीस दिवसात ऑनलाईन परिपूर्ण ज्ञान मिळेल.
+
+■ परीक्षेसाठी असणाऱ्या पाच विषयांच्या पंधरा प्लस सराव प्रश्नपत्रिका ऑनलाईन मिळतील.
+
+■ TET /TAIT सराव प्रश्नपत्रिकांचे उत्तरे व इतर सर्व अनुषंगिक ऑनलाईन मार्गदर्शन यामध्ये समाविष्ट राहील.
+
+■ TET /TAIT परीक्षेला सामोरे जाताना हा अतिशय महत्त्वाचा एक संवाद व्हिडिओ दिला जाईल.
+
+■ TET /TAIT परीक्षेसाठी असलेल्या पाच विषयांवर तज्ञ मार्गदर्शक यांचा प्रत्येकी एक असे वेगवेगळे पाच स्वतंत्र संवाद व्हिडिओ दिले जातील.
+
+■ TET /TAIT परीक्षा सोपी सुलभ व सहज व्हावी या परीक्षेबाबत सजगता व सक्षमता यावी असा हा उपक्रम निश्चित आपणास पसंत पडेल याची आम्हाला खात्री आहे.
+
+आपले आता सर्व लक्षात आलेच असेलतर मग...
+
+TET / TAIT परीक्षेसाठी अल्पकाळात भरघोस व अत्यंत उपयुक्त माहिती आणि हमखास यश मिळवून देणाऱ्या आमच्या उपक्रमात आपणास सहभागी व्हायचे आहे का ?`
+    }
+  };
+
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-secondary-gray py-12">
+      {/* Welcome Popup */}
+      {showWelcomePopup && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          >
+            {/* Header with language toggle */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#8CC63F] to-[#6FA030]">
+              <h2 className="text-2xl font-bold text-white">
+                {welcomeContent[popupLanguage].title}
+              </h2>
+              <div className="flex items-center space-x-4">
+                <div className="flex bg-white/20 rounded-lg p-1">
+                  <button
+                    onClick={() => setPopupLanguage('en')}
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                      popupLanguage === 'en'
+                        ? 'bg-white text-[#8CC63F]'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => setPopupLanguage('mr')}
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                      popupLanguage === 'mr'
+                        ? 'bg-white text-[#8CC63F]'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    मराठी
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowWelcomePopup(false)}
+                  className="text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="prose prose-lg max-w-none">
+                <pre className="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans text-base">
+                  {welcomeContent[popupLanguage].content}
+                </pre>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-center p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowWelcomePopup(false)}
+                className="bg-gradient-to-r from-[#8CC63F] to-[#6FA030] text-white px-8 py-3 rounded-lg font-semibold text-lg hover:from-[#6FA030] hover:to-[#5A8A26] transition-all shadow-lg hover:shadow-xl"
+              >
+                {popupLanguage === 'en' ? 'Continue to Registration' : 'नोंदणी सुरू करा'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
