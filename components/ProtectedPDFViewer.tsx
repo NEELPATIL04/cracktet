@@ -42,9 +42,80 @@ export default function ProtectedPDFViewer({
   const [totalPages] = useState(0); // TODO: Implement total page detection
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [overlayBlack, setOverlayBlack] = useState(false);
+  const [devToolsBlockedEntry, setDevToolsBlockedEntry] = useState(false);
 
-  // Load PDF as blob
+  // Check for dev tools on component mount
   useEffect(() => {
+    const checkInitialDevTools = () => {
+      const threshold = 160;
+      const widthDiff = window.outerWidth - window.innerWidth;
+      const heightDiff = window.outerHeight - window.innerHeight;
+      const widthThreshold = widthDiff > threshold;
+      const heightThreshold = heightDiff > threshold;
+
+      console.log("🔍 Dev tools check:", {
+        outerWidth: window.outerWidth,
+        innerWidth: window.innerWidth,
+        outerHeight: window.outerHeight,
+        innerHeight: window.innerHeight,
+        widthDiff,
+        heightDiff,
+        threshold,
+        widthThreshold,
+        heightThreshold
+      });
+
+      if (widthThreshold || heightThreshold) {
+        console.log("🚫 Dev tools detected on PDF entry - blocking access");
+        setDevToolsBlockedEntry(true);
+        setError("Developer tools must be closed to access this content");
+        setLoading(false);
+        return true;
+      }
+      console.log("✅ No dev tools detected on entry");
+      return false;
+    };
+
+    // Alternative detection method using console
+    const checkConsoleDevTools = () => {
+      const startTime = performance.now();
+      console.log('%c', 'color: transparent;');
+      const endTime = performance.now();
+      const timeDiff = endTime - startTime;
+      
+      console.log("🔍 Console detection time:", timeDiff);
+      
+      if (timeDiff > 5) {
+        console.log("🚫 Dev tools detected via console method - blocking access");
+        setDevToolsBlockedEntry(true);
+        setError("Developer tools must be closed to access this content");
+        setLoading(false);
+        return true;
+      }
+      return false;
+    };
+
+    // Wait a moment for window to settle, then check
+    setTimeout(() => {
+      // Try both detection methods
+      if (checkInitialDevTools() || checkConsoleDevTools()) return;
+      
+      const checkInterval = setInterval(() => {
+        if (checkInitialDevTools() || checkConsoleDevTools()) {
+          clearInterval(checkInterval);
+        }
+      }, 200);
+
+      // Clear interval after 5 seconds if no dev tools detected
+      setTimeout(() => clearInterval(checkInterval), 5000);
+    }, 500);
+
+  }, []);
+
+  // Load PDF as blob (only if dev tools not detected)
+  useEffect(() => {
+    if (devToolsBlockedEntry) return; // Don't load PDF if dev tools detected
+
     const loadPDF = async () => {
       try {
         const response = await fetch(pdfUrl);
@@ -82,7 +153,7 @@ export default function ProtectedPDFViewer({
         URL.revokeObjectURL(pdfBlobUrl);
       }
     };
-  }, [pdfUrl]);
+  }, [pdfUrl, devToolsBlockedEntry]);
 
   // ✅ Auto-enter browser fullscreen when PDF is ready (more reliable)
   useEffect(() => {
@@ -139,16 +210,23 @@ export default function ProtectedPDFViewer({
         return;
       }
       
-      // Any other key press - make overlay black
+      // Any other key press - make overlay black INSTANTLY
       e.preventDefault();
       e.stopPropagation();
-      console.log("🔒 SCREEN TURNING BLACK - Key pressed:", e.key);
-      console.log("Setting overlayBlack to true");
+      console.log("🔒 SCREEN TURNING BLACK INSTANTLY - Key pressed:", e.key);
+      
+      // Find the protective layer and make it black immediately via DOM manipulation
+      const protectiveLayer = document.querySelector('.pdf-protective-layer') as HTMLElement;
+      if (protectiveLayer) {
+        protectiveLayer.style.backgroundColor = '#000000';
+        protectiveLayer.style.transition = 'none'; // Remove transition for instant change
+        console.log("🎨 Applied instant black background via DOM");
+      }
+      
+      // Then update React state for UI consistency
       setOverlayBlack(true);
       setWarningMessage("Double-click anywhere to restore content");
       setShowWarningPopup(true);
-      
-      // Make sure we don't trigger other blur effects
       setIsBlurred(false);
     };
 
@@ -936,15 +1014,38 @@ export default function ProtectedPDFViewer({
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
         <div className="text-center max-w-lg p-8">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h3 className="text-2xl font-bold text-red-600 mb-4">Failed to Load PDF</h3>
+          <div className="text-6xl mb-4">{devToolsBlockedEntry ? '🔒' : '⚠️'}</div>
+          <h3 className="text-2xl font-bold text-red-600 mb-4">
+            {devToolsBlockedEntry ? 'Access Blocked' : 'Failed to Load PDF'}
+          </h3>
           <p className="text-gray-700 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-          >
-            Retry
-          </button>
+          {devToolsBlockedEntry ? (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-800 font-semibold">🛡️ Security Protection Active</p>
+                <p className="text-red-700 text-sm mt-2">
+                  Close all developer tools and browser extensions, then reload the page to access this content.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setDevToolsBlockedEntry(false);
+                  setError("");
+                  setLoading(true);
+                }}
+                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              >
+                Check Again
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );
@@ -1230,6 +1331,16 @@ export default function ProtectedPDFViewer({
                     if (overlayBlack) {
                       // Double-click to restore content
                       console.log("⚪ DOUBLE-CLICK DETECTED - Restoring content");
+                      
+                      // Reset DOM styles first
+                      const protectiveLayer = document.querySelector('.pdf-protective-layer') as HTMLElement;
+                      if (protectiveLayer) {
+                        protectiveLayer.style.backgroundColor = 'transparent';
+                        protectiveLayer.style.transition = 'background-color 0.3s ease'; // Restore transition
+                        console.log("🎨 Reset DOM background to transparent");
+                      }
+                      
+                      // Then update React state
                       setOverlayBlack(false);
                       setShowWarningPopup(false);
                     }
