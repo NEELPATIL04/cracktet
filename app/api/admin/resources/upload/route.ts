@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { resources } from "@/db/schema";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { existsSync } from "fs";
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin session
-    const session = request.cookies.get("admin_session");
+    // ✅ Verify admin session (matches your login format)
+    const session = request.cookies.get("admin-auth");
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized - Admin access required" },
+        { status: 401 }
+      );
     }
 
-    const adminData = JSON.parse(session.value);
+    // ✅ Optional: Parse admin data if stored as JSON
+    let adminData = null;
+    try {
+      adminData = JSON.parse(session.value);
+    } catch (e) {
+      // Session is a simple token, not JSON - that's fine
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -34,18 +44,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { error: "File size must be less than 50MB" },
+        { status: 400 }
+      );
+    }
+
     // Create unique filename
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
 
-    // Save file to public/uploads directory
+    // ✅ Ensure uploads directory exists
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true });
+    }
+
+    // Save file
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
     const filePath = path.join(uploadDir, fileName);
-
     await writeFile(filePath, buffer);
 
     // Calculate file size
@@ -60,7 +82,6 @@ export async function POST(request: NextRequest) {
         fileName: originalName,
         fileUrl: `/uploads/${fileName}`,
         fileSize: `${fileSizeInMB} MB`,
-        uploadedBy: adminData.id,
         isActive: true,
       })
       .returning();
@@ -68,6 +89,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       resource: newResource,
+      message: "Resource uploaded successfully",
     });
   } catch (error) {
     console.error("Upload error:", error);

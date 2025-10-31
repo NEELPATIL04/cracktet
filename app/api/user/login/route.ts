@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
+import bcrypt from "bcrypt"; // Add this import
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is active or payment is completed
-    // Users created by admin have isActive=true, regular users need completed payment
     if (!user.isActive || user.paymentStatus !== "completed") {
       return NextResponse.json(
         { error: "Your account is not active. Please complete payment or contact admin." },
@@ -42,8 +42,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check password (in production, use bcrypt)
-    if (user.password !== password) {
+    // ✅ FIXED: Use bcrypt.compare() to verify hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
@@ -64,16 +66,23 @@ export async function POST(request: NextRequest) {
     });
 
     // Set cookie
-    response.cookies.set("user_session", JSON.stringify({
+    const sessionData = {
       id: user.id,
       name: user.name,
       email: user.email,
-    }), {
+    };
+
+    console.log("✅ Setting user_session cookie for:", user.email);
+
+    response.cookies.set("user_session", JSON.stringify(sessionData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/", // Ensure cookie is available site-wide
     });
+
+    console.log("🍪 Cookie set with path: /");
 
     return response;
   } catch (error) {

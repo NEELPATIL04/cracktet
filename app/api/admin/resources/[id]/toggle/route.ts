@@ -8,10 +8,13 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify admin session
-    const session = request.cookies.get("admin_session");
+    // ✅ Verify admin session (matches your login format)
+    const session = request.cookies.get("admin-auth");
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized - Admin access required" },
+        { status: 401 }
+      );
     }
 
     const resourceId = parseInt(params.id);
@@ -31,15 +34,23 @@ export async function PATCH(
       );
     }
 
-    // Update resource
-    await db
+    const [updatedResource] = await db
       .update(resources)
-      .set({ isActive, updatedAt: new Date() })
-      .where(eq(resources.id, resourceId));
+      .set({ isActive })
+      .where(eq(resources.id, resourceId))
+      .returning();
+
+    if (!updatedResource) {
+      return NextResponse.json(
+        { error: "Resource not found" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Resource status updated",
+      message: `Resource ${isActive ? "activated" : "deactivated"} successfully`,
+      resource: updatedResource,
     });
   } catch (error) {
     console.error("Toggle error:", error);

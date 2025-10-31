@@ -365,31 +365,31 @@ export default function Admin() {
           className="text-center py-20"
         >
           <FaSpinner className="text-5xl text-primary animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 text-lg">{t.admin.loading}</p>
+          <p className="text-gray-600 text-lg">{t.admin.loading}</p>
         </motion.div>
       ) : error ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center"
+          className="bg-red-50 border border-red-200 rounded-lg p-6 text-center"
         >
-          <p className="text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-red-600">{error}</p>
         </motion.div>
       ) : users.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center"
+          className="bg-white rounded-lg shadow-lg p-12 text-center"
         >
-          <FaUsers className="text-6xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 text-lg">{t.admin.noUsers}</p>
+          <FaUsers className="text-6xl text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">{t.admin.noUsers}</p>
         </motion.div>
       ) : (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden"
+          className="bg-white rounded-xl shadow-md overflow-hidden"
         >
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
@@ -425,46 +425,46 @@ export default function Admin() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200">
                 {users.map((user, index) => (
                   <motion.tr
                     key={user.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    <td className="px-6 py-4 text-sm text-gray-900">
                       {user.id}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {user.name}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {user.email}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {user.district}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {user.address}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {user.mobile}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.paymentStatus === 'completed' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
-                        user.paymentStatus === 'failed' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
-                        user.paymentStatus === 'initiated' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400' :
-                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                        user.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                        user.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                        user.paymentStatus === 'initiated' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
                         {user.paymentStatus === 'completed' && <FaRupeeSign className="mr-1" />}
                         {user.paymentStatus || 'pending'}
                         {user.paymentAmount && user.paymentStatus === 'completed' && ` (₹${user.paymentAmount})`}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    <td className="px-6 py-4 text-sm text-gray-700">
                       {formatDate(user.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -490,17 +490,17 @@ export default function Admin() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="md:hidden divide-y divide-gray-200">
             {users.map((user, index) => (
               <motion.div
                 key={user.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="p-6 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-lg text-gray-900">
                     {user.name}
                   </h3>
                   <span className="bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
@@ -509,56 +509,56 @@ export default function Admin() {
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600">
                       {t.admin.table.email}:
                     </span>
-                    <span className="text-gray-900 dark:text-gray-100 font-medium">
+                    <span className="text-gray-900 font-medium">
                       {user.email}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600">
                       {t.admin.table.district}:
                     </span>
-                    <span className="text-gray-900 dark:text-gray-100 font-medium">
+                    <span className="text-gray-900 font-medium">
                       {user.district}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600">
                       {t.admin.table.address}:
                     </span>
-                    <span className="text-gray-900 dark:text-gray-100 font-medium">
+                    <span className="text-gray-900 font-medium">
                       {user.address}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600">
                       {t.admin.table.mobile}:
                     </span>
-                    <span className="text-gray-900 dark:text-gray-100 font-medium">
+                    <span className="text-gray-900 font-medium">
                       {user.mobile}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600">
                       Payment:
                     </span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.paymentStatus === 'completed' ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' :
-                      user.paymentStatus === 'failed' ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400' :
-                      user.paymentStatus === 'initiated' ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400' :
-                      'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                      user.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                      user.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                      user.paymentStatus === 'initiated' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
                     }`}>
                       {user.paymentStatus === 'completed' && <FaRupeeSign className="mr-1" />}
                       {user.paymentStatus || 'pending'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600">
                       {t.admin.table.registeredAt}:
                     </span>
-                    <span className="text-gray-900 dark:text-gray-100 font-medium">
+                    <span className="text-gray-900 font-medium">
                       {formatDate(user.createdAt)}
                     </span>
                   </div>
@@ -582,8 +582,8 @@ export default function Admin() {
           </div>
 
           {/* Summary */}
-          <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600 text-center">
               Total Registered Users: <span className="font-semibold text-primary">{users.length}</span>
             </p>
           </div>

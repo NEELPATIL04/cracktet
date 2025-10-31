@@ -1,17 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState("en");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, [pathname]);
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch("/api/user/verify");
+      setIsLoggedIn(response.ok);
+    } catch (error) {
+      setIsLoggedIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/user/logout", { method: "POST" });
+      setIsLoggedIn(false);
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const languages = [
     { code: "en", name: "English" },
@@ -93,30 +118,64 @@ export default function Navbar() {
               {translations.home}
             </Link>
 
-            
+            {!isLoggedIn && (
+              <>
+                <Link href="/login" className="relative overflow-hidden">
+                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                    Login
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
 
-            <Link href="/register" className="relative overflow-hidden">
-              <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
-                {translations.register}
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                  animate={{
-                    x: ['-200%', '200%']
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                    repeatDelay: 0.5
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    pointerEvents: 'none'
-                  }}
-                />
-              </span>
-            </Link>
+                <Link href="/register" className="relative overflow-hidden">
+                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                    {translations.register}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+              </>
+            )}
+
+            {isLoggedIn && (
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            )}
 
             {/* Language Toggle */}
             <div className="relative">
@@ -162,28 +221,64 @@ export default function Navbar() {
 
           {/* Mobile Register & Menu Buttons */}
           <div className="md:hidden flex items-center space-x-2">
-            <Link href="/register" className="relative overflow-hidden">
-              <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
-                {translations.register}
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                  animate={{
-                    x: ['-200%', '200%']
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                    repeatDelay: 0.5
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    pointerEvents: 'none'
-                  }}
-                />
-              </span>
-            </Link>
+            {!isLoggedIn && (
+              <>
+                <Link href="/login" className="relative overflow-hidden">
+                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                    Login
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+
+                <Link href="/register" className="relative overflow-hidden">
+                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                    {translations.register}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+              </>
+            )}
+
+            {isLoggedIn && (
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            )}
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

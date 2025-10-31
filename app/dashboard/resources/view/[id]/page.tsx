@@ -2,24 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import ProtectedPDFViewer from "@/components/ProtectedPDFViewer";
 import { FiArrowLeft } from "react-icons/fi";
+import ProtectedPDFViewer from "@/components/ProtectedPDFViewer";
 
 interface Resource {
   id: number;
   title: string;
   description: string;
+  fileName: string;
+  fileSize: string;
   fileUrl: string;
+  createdAt: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
 }
 
 export default function ViewResourcePage() {
   const params = useParams();
   const router = useRouter();
   const [resource, setResource] = useState<Resource | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // ✅ Fetch resource directly - API will verify session via httpOnly cookie
     if (params.id) {
       fetchResource(params.id as string);
     }
@@ -27,13 +38,35 @@ export default function ViewResourcePage() {
 
   const fetchResource = async (id: string) => {
     try {
-      const response = await fetch(`/api/user/resources/${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to load resource");
+      const response = await fetch(`/api/resources/${id}`);
+
+      if (response.status === 401) {
+        console.log("❌ Unauthorized - redirecting to login");
+        router.push("/login");
+        return;
       }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to load resource");
+      }
+
       const data = await response.json();
+      console.log("✅ Resource loaded:", data.resource?.title);
+      console.log("✅ User data received:", data.user?.email);
+
       setResource(data.resource);
+      setUserData(data.user); // Set user data from API response
+
+      // ✅ Log resource access
+      await fetch("/api/resources/log-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resourceId: parseInt(id) }),
+      }).catch(() => {});
+
     } catch (err) {
+      console.error("❌ Error fetching resource:", err);
       setError(err instanceof Error ? err.message : "Failed to load resource");
     } finally {
       setLoading(false);
@@ -42,65 +75,51 @@ export default function ViewResourcePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-100">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading resource...</p>
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-900 text-lg font-semibold">Loading resource...</p>
+          <p className="text-gray-600 text-sm mt-2">Please wait...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !resource) {
+  if (error || !resource || !userData) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {error || "Resource not found"}
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center max-w-md px-6">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-3xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700 mb-6">
+            {error || "Resource not found or you don't have permission to view it"}
           </p>
-          <button
-            onClick={() => router.back()}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go Back
-          </button>
+          <div className="flex space-x-4 justify-center">
+            <button
+              onClick={() => router.back()}
+              className="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            >
+              <FiArrowLeft className="inline mr-2" />
+              Go Back
+            </button>
+            <button
+              onClick={() => router.push("/dashboard/resources")}
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
+            >
+              View All Resources
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-900">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 bg-gray-800 text-white p-4 z-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <FiArrowLeft className="w-6 h-6" />
-            </button>
-            <div>
-              <h1 className="text-xl font-semibold">{resource.title}</h1>
-              {resource.description && (
-                <p className="text-sm text-gray-400 mt-1">
-                  {resource.description}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* PDF Viewer */}
-      <div className="pt-20 h-full">
-        <ProtectedPDFViewer
-          pdfUrl={resource.fileUrl}
-          resourceTitle={resource.title}
-        />
-      </div>
-    </div>
+    <ProtectedPDFViewer
+      pdfUrl={`/api/resources/${resource.id}/stream`}
+      resourceTitle={resource.title}
+      userName={userData.name}
+      userEmail={userData.email}
+    />
   );
 }

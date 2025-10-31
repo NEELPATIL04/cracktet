@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { FiHome, FiFile, FiUser, FiLogOut, FiMenu, FiX } from "react-icons/fi";
-import Image from "next/image";
+import { FiFile, FiLogOut, FiMenu, FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface User {
   id: number;
@@ -18,9 +18,24 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Check if we're on the PDF viewer page
+  const isPDFViewerPage = pathname?.includes('/dashboard/resources/view/');
+
+  // Get page title based on current route
+  const getPageTitle = () => {
+    if (pathname?.includes('/dashboard/resources/view/')) {
+      return 'View Resource';
+    } else if (pathname === '/dashboard/resources') {
+      return 'Study Resources';
+    }
+    return 'Dashboard';
+  };
 
   useEffect(() => {
     checkAuth();
@@ -57,123 +72,154 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-secondary-gray">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center space-y-4"
+        >
+          <div className="relative w-20 h-20">
+            <motion.div
+              className="absolute inset-0 border-4 border-primary rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              style={{ borderTopColor: "transparent" }}
+            />
+          </div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-primary text-lg font-semibold"
+          >
+            Loading...
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
 
+  const isActive = (path: string) => pathname === path;
+  const sidebarWidth = sidebarCollapsed ? "w-16" : "w-52"; // Reduced from w-64 to w-52
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Navbar */}
-      <nav className="bg-white dark:bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-full mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                {sidebarOpen ? (
-                  <FiX className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-                ) : (
-                  <FiMenu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-                )}
-              </button>
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <Image
-                  src="/logo.svg"
-                  alt="CrackTET"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10"
-                />
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  CrackTET
-                </span>
-              </Link>
+    <div className="h-screen overflow-hidden bg-secondary-gray">
+      {/* Top Navbar - Hidden on PDF viewer */}
+      {!isPDFViewerPage && (
+        <nav className="fixed top-0 left-0 right-0 h-16 bg-primary text-white shadow-lg z-30 flex items-center justify-between px-6">
+          {/* Left side - Mobile menu button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="lg:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+          >
+            {sidebarOpen ? (
+              <FiX className="w-6 h-6" />
+            ) : (
+              <FiMenu className="w-6 h-6" />
+            )}
+          </button>
+
+          {/* Center - Dynamic Title */}
+          <div className="flex-1 text-center lg:text-left lg:pl-4">
+            <h1 className="text-xl font-bold">{getPageTitle()}</h1>
+          </div>
+
+          {/* Right side - User info */}
+          <div className="hidden md:flex items-center space-x-3">
+            <div className="text-right">
+              <p className="text-sm font-medium">{user?.name}</p>
+              <p className="text-xs text-white text-opacity-80">{user?.email}</p>
             </div>
-
-            {/* Right section */}
-            <div className="flex items-center space-x-4">
-              {/* User Profile */}
-              <div className="flex items-center space-x-3">
-                <div className="hidden md:block text-right">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user?.email}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {user?.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
-              >
-                <FiLogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
+            <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center font-bold">
+              {user?.name?.charAt(0) || "U"}
             </div>
           </div>
+        </nav>
+      )}
+
+      {/* Sidebar - Hidden on PDF viewer */}
+      {!isPDFViewerPage && (
+        <aside
+          className={`fixed top-0 left-0 h-full ${sidebarWidth} bg-white shadow-lg transform transition-all duration-300 z-50 flex flex-col ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
+        >
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-gray-200">
+          {!sidebarCollapsed ? (
+            <>
+              <h2 className="text-xl font-bold text-primary">My Dashboard</h2>
+              <p className="text-sm text-gray-500 mt-1 truncate">Welcome, {user?.name}</p>
+            </>
+          ) : (
+            <div className="flex justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                {user?.name?.charAt(0) || "U"}
+              </div>
+            </div>
+          )}
         </div>
-      </nav>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 z-40 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
-      >
-        <nav className="p-4 space-y-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          >
-            <FiHome className="w-5 h-5" />
-            <span className="font-medium">Dashboard</span>
-          </Link>
-
+        {/* Menu Items */}
+        <nav className="flex-1 p-4 space-y-2">
           <Link
             href="/dashboard/resources"
-            className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg transition-colors ${
+              isActive("/dashboard/resources")
+                ? "bg-primary text-white"
+                : "hover:bg-gray-100 text-gray-700"
+            }`}
+            title="Resources"
           >
             <FiFile className="w-5 h-5" />
-            <span className="font-medium">Resources</span>
-          </Link>
-
-          <Link
-            href="/dashboard/profile"
-            className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          >
-            <FiUser className="w-5 h-5" />
-            <span className="font-medium">Profile</span>
+            {!sidebarCollapsed && <span className="font-medium">Resources</span>}
           </Link>
         </nav>
-      </aside>
+
+        {/* Collapse Button (Desktop only) */}
+        <div className="hidden lg:flex items-center justify-center p-2 border-t border-gray-200">
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <FiChevronRight className="w-5 h-5 text-gray-600" />
+            ) : (
+              <FiChevronLeft className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+        </div>
+
+        {/* Logout Button at Bottom */}
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-center space-x-2'} px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200`}
+            title="Logout"
+          >
+            <FiLogOut className="w-5 h-5" />
+            {!sidebarCollapsed && <span className="font-medium">Logout</span>}
+          </button>
+        </div>
+        </aside>
+      )}
 
       {/* Overlay for mobile */}
-      {sidebarOpen && (
+      {!isPDFViewerPage && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Main Content */}
-      <main className="pt-16 lg:pl-64 min-h-screen">
-        <div className="p-6">{children}</div>
+      {/* Main Content - Full screen on PDF viewer */}
+      <main className={`fixed ${isPDFViewerPage ? 'inset-0' : `top-16 bottom-0 ${sidebarCollapsed ? 'left-16' : 'left-52'} right-0`} transition-all duration-300 overflow-hidden`}>
+        <div className={`w-full h-full ${isPDFViewerPage ? '' : 'overflow-auto p-6'}`}>
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { eq, or } from "drizzle-orm"; // Import operators
+import bcrypt from "bcrypt";
 
 export async function POST(request: NextRequest) {
   try {
     // Verify admin session
-    const session = request.cookies.get("admin_session");
+    const session = request.cookies.get("admin-auth");
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -20,11 +22,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
+    // Validate password length
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists - FIXED SYNTAX
     const existingUsers = await db
       .select()
       .from(users)
-      .where((u) => u.email === email || u.mobile === mobile)
+      .where(
+        or(
+          eq(users.email, email),
+          eq(users.mobile, mobile)
+        )
+      )
       .limit(1);
 
     if (existingUsers.length > 0) {
@@ -33,6 +48,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Hash password before storing
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user with active status (no payment required)
     const [newUser] = await db
@@ -43,10 +62,10 @@ export async function POST(request: NextRequest) {
         mobile,
         district,
         address: address || "",
-        password, // In production, hash this password
-        isActive: true, // Directly activate user
+        password: hashedPassword, // Store hashed password
+        isActive: true,
         paymentStatus: "completed",
-        paymentAmount: "0", // Free access by admin
+        paymentAmount: "0",
       })
       .returning();
 

@@ -10,10 +10,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify admin session
-    const session = request.cookies.get("admin_session");
+    // ✅ Verify admin session (matches your login format)
+    const session = request.cookies.get("admin-auth");
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized - Admin access required" },
+        { status: 401 }
+      );
     }
 
     const resourceId = parseInt(params.id);
@@ -24,7 +27,6 @@ export async function DELETE(
       );
     }
 
-    // Get resource details before deleting
     const [resource] = await db
       .select()
       .from(resources)
@@ -44,7 +46,7 @@ export async function DELETE(
       await unlink(filePath);
     } catch (fileError) {
       console.error("Error deleting file:", fileError);
-      // Continue with database deletion even if file deletion fails
+      // Continue even if file deletion fails
     }
 
     // Delete from database

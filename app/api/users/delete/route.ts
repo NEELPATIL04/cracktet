@@ -8,14 +8,19 @@ export async function DELETE(request: NextRequest) {
   try {
     // Check if admin is authenticated
     const cookieStore = await cookies();
-    const adminSession = cookieStore.get("admin_session");
+    const adminSession = cookieStore.get("admin-auth");
+
+    console.log("🔍 Delete User API - Admin auth cookie:", adminSession ? "exists" : "missing");
 
     if (!adminSession) {
+      console.log("❌ Delete: No admin auth cookie found");
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
+
+    console.log("✅ Delete: Admin authenticated");
 
     // Get user ID from request body
     const body = await request.json();

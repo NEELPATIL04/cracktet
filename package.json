@@ -12,19 +12,23 @@
     "seed:admin": "tsx scripts/seed-admin.ts"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.38.3",
     "framer-motion": "^11.15.0",
     "next": "^15.1.3",
     "next-intl": "^3.23.0",
+    "pdfjs-dist": "^5.4.296",
     "postgres": "^3.4.5",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
+    "react-pdf": "^10.2.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
