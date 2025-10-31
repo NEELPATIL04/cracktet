@@ -10,6 +10,7 @@ interface ProtectedPDFViewerProps {
   resourceTitle: string;
   userName: string;
   userEmail: string;
+  userMobile: string;
 }
 
 export default function ProtectedPDFViewer({
@@ -17,8 +18,9 @@ export default function ProtectedPDFViewer({
   resourceTitle,
   userName,
   userEmail,
+  userMobile,
 }: ProtectedPDFViewerProps) {
-  console.log("🚀 ProtectedPDFViewer mounted with:", { pdfUrl, resourceTitle, userName, userEmail });
+  console.log("🚀 ProtectedPDFViewer mounted with:", { pdfUrl, resourceTitle, userName, userEmail, userMobile });
 
   const router = useRouter();
   const { t } = useLanguage();
@@ -86,6 +88,11 @@ export default function ProtectedPDFViewer({
   // ✅ Detect DevTools opening
   useEffect(() => {
     const detectDevTools = () => {
+      // Skip detection in fullscreen mode to prevent false positives
+      if (isFullscreen) {
+        return;
+      }
+      
       const threshold = 160;
       const widthThreshold = window.outerWidth - window.innerWidth > threshold;
       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
@@ -102,7 +109,7 @@ export default function ProtectedPDFViewer({
 
     const interval = setInterval(detectDevTools, 1000);
     return () => clearInterval(interval);
-  }, [resourceTitle]);
+  }, [resourceTitle, isFullscreen]);
 
   // ✅ Enhanced screenshot protection
   useEffect(() => {
@@ -172,21 +179,271 @@ export default function ProtectedPDFViewer({
     };
   }, [violationCount]);
 
-  // ✅ Enhanced protection against screenshots and downloads
+  // ✅ Aggressive F12 blocker for fullscreen mode
   useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
+    if (!isFullscreen) return;
+
+    const blockF12 = (e: KeyboardEvent) => {
+      if (e.key === "F12" || e.keyCode === 123) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log("🚫 F12 blocked in fullscreen");
+        setWarningMessage("Developer tools are disabled in fullscreen mode");
+        setShowWarningPopup(true);
+        setTimeout(() => setShowWarningPopup(false), 3000);
+        return false;
+      }
+    };
+
+    // Add multiple event listeners to catch F12
+    document.addEventListener("keydown", blockF12, { capture: true, passive: false });
+    window.addEventListener("keydown", blockF12, { capture: true, passive: false });
+    document.body.addEventListener("keydown", blockF12, { capture: true, passive: false });
+
+    return () => {
+      document.removeEventListener("keydown", blockF12, { capture: true });
+      window.removeEventListener("keydown", blockF12, { capture: true });
+      document.body.removeEventListener("keydown", blockF12, { capture: true });
+    };
+  }, [isFullscreen]);
+
+  // ✅ Aggressive right-click blocker for all resource routes (Mac compatible)
+  useEffect(() => {
+
+    const blockRightClick = (e: Event) => {
+      console.log("🚫 Right-click detected, blocking...", e.type, e.target);
       e.preventDefault();
       e.stopPropagation();
-      setWarningMessage(t.pdfViewer.warnings.rightClick);
+      e.stopImmediatePropagation();
+      setWarningMessage("Right-click is disabled on protected content");
       setShowWarningPopup(true);
-      setTimeout(() => setShowWarningPopup(false), 2000);
+      setTimeout(() => setShowWarningPopup(false), 3000);
       return false;
     };
 
+    const blockMouseDown = (e: MouseEvent) => {
+      console.log("🔍 Mouse down detected:", e.button, "Ctrl:", e.ctrlKey, "Meta:", e.metaKey);
+      // Block right-click (button 2) and Ctrl+click (Mac right-click)
+      if (e.button === 2 || (e.button === 0 && e.ctrlKey)) {
+        console.log("🚫 Right-click mousedown blocked on resource page");
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        setWarningMessage("Right-click is disabled on protected content");
+        setShowWarningPopup(true);
+        setTimeout(() => setShowWarningPopup(false), 3000);
+        return false;
+      }
+    };
+
+    const blockMouseUp = (e: MouseEvent) => {
+      // Block right-click (button 2) and Ctrl+click (Mac right-click)
+      if (e.button === 2 || (e.button === 0 && e.ctrlKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+      }
+    };
+
+    // Add multiple event listeners to catch all right-click variations
+    document.addEventListener("contextmenu", blockRightClick, { capture: true, passive: false });
+    window.addEventListener("contextmenu", blockRightClick, { capture: true, passive: false });
+    document.body.addEventListener("contextmenu", blockRightClick, { capture: true, passive: false });
+    
+    // Mac-specific: block mousedown/mouseup with right button or Ctrl+click
+    document.addEventListener("mousedown", blockMouseDown, { capture: true, passive: false });
+    document.addEventListener("mouseup", blockMouseUp, { capture: true, passive: false });
+    window.addEventListener("mousedown", blockMouseDown, { capture: true, passive: false });
+    window.addEventListener("mouseup", blockMouseUp, { capture: true, passive: false });
+    
+    // Also add to the PDF container if it exists
+    if (pdfContainerRef.current) {
+      const container = pdfContainerRef.current;
+      container.addEventListener("contextmenu", blockRightClick, { capture: true, passive: false });
+      container.addEventListener("mousedown", blockMouseDown, { capture: true, passive: false });
+      container.addEventListener("mouseup", blockMouseUp, { capture: true, passive: false });
+    }
+
+    return () => {
+      document.removeEventListener("contextmenu", blockRightClick, { capture: true });
+      window.removeEventListener("contextmenu", blockRightClick, { capture: true });
+      document.body.removeEventListener("contextmenu", blockRightClick, { capture: true });
+      document.removeEventListener("mousedown", blockMouseDown, { capture: true });
+      document.removeEventListener("mouseup", blockMouseUp, { capture: true });
+      window.removeEventListener("mousedown", blockMouseDown, { capture: true });
+      window.removeEventListener("mouseup", blockMouseUp, { capture: true });
+      
+      // Also remove from PDF container if it exists
+      if (pdfContainerRef.current) {
+        const container = pdfContainerRef.current;
+        container.removeEventListener("contextmenu", blockRightClick, { capture: true });
+        container.removeEventListener("mousedown", blockMouseDown, { capture: true });
+        container.removeEventListener("mouseup", blockMouseUp, { capture: true });
+      }
+    };
+  }, []); // Always active when component is mounted
+
+  // ✅ Advanced screenshot detection for Mac and Windows
+  useEffect(() => {
+    let isDetecting = true;
+
+    // Method 1: Detect common screenshot key combinations
+    const detectScreenshotKeys = (e: KeyboardEvent) => {
+      const screenshotCombinations = [
+        // Windows screenshot keys
+        e.key === "PrintScreen",
+        e.key === "Print",
+        e.altKey && e.key === "PrintScreen",
+        e.metaKey && e.shiftKey && e.key === "S", // Win+Shift+S (Snipping Tool)
+        
+        // Mac screenshot keys
+        e.metaKey && e.shiftKey && e.key === "3", // Cmd+Shift+3 (full screen)
+        e.metaKey && e.shiftKey && e.key === "4", // Cmd+Shift+4 (selection)
+        e.metaKey && e.shiftKey && e.key === "5", // Cmd+Shift+5 (screenshot app)
+        e.key === "F13", // Mac Print Screen equivalent
+        
+        // Third-party screenshot tools
+        e.ctrlKey && e.shiftKey && e.key === "A", // Some screenshot tools
+        e.altKey && e.key === "a", // Some screenshot tools
+      ];
+
+      if (screenshotCombinations.some(condition => condition)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const newCount = violationCount + 1;
+        setViolationCount(newCount);
+        setShowViolationPopup(true);
+        setIsBlurred(true);
+        
+        console.log("🚫 Screenshot attempt detected:", e.key, e.metaKey, e.shiftKey, e.altKey);
+        
+        // Log violation to API
+        fetch("/api/resources/log-violation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "screenshot_attempt",
+            details: `Key combination: ${e.key} (Meta: ${e.metaKey}, Shift: ${e.shiftKey}, Alt: ${e.altKey})`,
+            timestamp: new Date().toISOString(),
+          }),
+        }).catch(() => {});
+
+        if (newCount >= 3) {
+          setTimeout(() => {
+            alert("Too many violations detected. You will be logged out.");
+            router.push("/login");
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            setShowViolationPopup(false);
+            setIsBlurred(false);
+          }, 3000);
+        }
+        
+        return false;
+      }
+    };
+
+    // Method 2: Detect window focus/blur (screenshot tools often cause this)
+    let lastBlurTime = 0;
+    const detectWindowBlur = () => {
+      const now = Date.now();
+      if (now - lastBlurTime < 2000) return; // Debounce
+      lastBlurTime = now;
+      
+      console.log("⚠️ Window lost focus - possible screenshot tool");
+      setWarningMessage("Suspicious activity detected");
+      setShowWarningPopup(true);
+      setTimeout(() => setShowWarningPopup(false), 2000);
+    };
+
+    // Method 3: Detect clipboard access (screenshots often go to clipboard)
+    const detectClipboardAccess = async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.read) {
+          // This will trigger permission request, alerting us to clipboard access
+          await navigator.clipboard.read();
+          console.log("⚠️ Clipboard access detected");
+        }
+      } catch (e) {
+        // Expected - most screenshot tools will be blocked here
+      }
+    };
+
+    // Method 4: Monitor for rapid page visibility changes
+    let visibilityChangeCount = 0;
+    const detectVisibilityChange = () => {
+      visibilityChangeCount++;
+      if (visibilityChangeCount > 3) {
+        console.log("⚠️ Multiple visibility changes - possible screenshot tool");
+        setWarningMessage("Suspicious activity detected");
+        setShowWarningPopup(true);
+        setTimeout(() => setShowWarningPopup(false), 2000);
+        visibilityChangeCount = 0;
+      }
+      
+      setTimeout(() => {
+        if (visibilityChangeCount > 0) visibilityChangeCount--;
+      }, 5000);
+    };
+
+    // Add event listeners
+    document.addEventListener("keydown", detectScreenshotKeys, { capture: true, passive: false });
+    window.addEventListener("blur", detectWindowBlur);
+    document.addEventListener("visibilitychange", detectVisibilityChange);
+    
+    // Periodically check clipboard (this may trigger permission requests)
+    const clipboardInterval = setInterval(() => {
+      if (isDetecting) detectClipboardAccess();
+    }, 10000);
+
+    return () => {
+      isDetecting = false;
+      document.removeEventListener("keydown", detectScreenshotKeys, { capture: true });
+      window.removeEventListener("blur", detectWindowBlur);
+      document.removeEventListener("visibilitychange", detectVisibilityChange);
+      clearInterval(clipboardInterval);
+    };
+  }, [violationCount, router]);
+
+  // ✅ Enhanced protection against screenshots and downloads
+  useEffect(() => {
+    // Context menu is already handled by the aggressive blocker above
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12 and developer tools shortcuts ESPECIALLY in fullscreen
+      if (isFullscreen) {
+        // In fullscreen, block ALL developer tools related keys
+        const devToolsKeys = [
+          e.key === "F12",
+          e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i"),
+          e.ctrlKey && e.shiftKey && (e.key === "J" || e.key === "j"),
+          e.ctrlKey && e.shiftKey && (e.key === "C" || e.key === "c"),
+          e.metaKey && e.altKey && (e.key === "I" || e.key === "i"),
+          e.metaKey && e.altKey && (e.key === "J" || e.key === "j"),
+          e.metaKey && e.altKey && (e.key === "C" || e.key === "c"),
+          e.ctrlKey && e.key === "u",
+          e.ctrlKey && e.key === "U",
+        ];
+        
+        if (devToolsKeys.some((condition) => condition)) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          setWarningMessage("Developer tools are disabled in fullscreen mode");
+          setShowWarningPopup(true);
+          setTimeout(() => setShowWarningPopup(false), 3000);
+          return false;
+        }
+      }
+      
       // ESC key to exit fullscreen
       if (e.key === "Escape" && isFullscreen) {
-        setIsFullscreen(false);
+        toggleFullscreen();
         return;
       }
 
@@ -242,14 +499,12 @@ export default function ProtectedPDFViewer({
       return false;
     };
 
-    document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("keydown", handleKeyDown, { capture: true });
     document.addEventListener("dragstart", handleDragStart);
     document.addEventListener("selectstart", handleSelectStart);
     document.addEventListener("copy", handleCopy);
 
     return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("dragstart", handleDragStart);
       document.removeEventListener("selectstart", handleSelectStart);
@@ -287,6 +542,12 @@ export default function ProtectedPDFViewer({
     const newFullscreenState = !isFullscreen;
     console.log('Toggling fullscreen to:', newFullscreenState);
     setIsFullscreen(newFullscreenState);
+    
+    // Clear devtools warning when entering fullscreen
+    if (newFullscreenState) {
+      setDevToolsOpen(false);
+    }
+    
     // Notify parent to hide/show navbar
     if (typeof window !== 'undefined') {
       const event = new CustomEvent('fullscreenChange', {
@@ -581,13 +842,20 @@ export default function ProtectedPDFViewer({
                   style={{
                     left: `${(i % 4) * 25 + 5}%`,
                     top: `${Math.floor(i / 4) * 18 + 5}%`,
-                    fontSize: i % 2 === 0 ? '3rem' : '1.5rem',
-                    color: i % 2 === 0 ? '#0d599c' : '#666',
-                    opacity: 0.03,
+                    color: i % 2 === 0 ? '#0d599c' : '#333',
+                    opacity: 0.15,
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  {i % 2 === 0 ? 'CrackTET' : userName}
+                  {i % 2 === 0 ? (
+                    <div style={{ fontSize: '3rem' }}>CrackTET</div>
+                  ) : (
+                    <div className="text-center">
+                      <div style={{ fontSize: '1.5rem' }}>{userName}</div>
+                      <div style={{ fontSize: '0.9rem', marginTop: '4px' }}>{userEmail}</div>
+                      <div style={{ fontSize: '0.9rem', marginTop: '2px' }}>{userMobile}</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         address: address || "",
         password: hashedPassword, // Store hashed password
         isActive: true,
-        paymentStatus: "completed",
+        paymentStatus: "admin_added",
         paymentAmount: "0",
       })
       .returning();

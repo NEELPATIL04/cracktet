@@ -13,6 +13,8 @@ export async function GET() {
         district: users.district,
         address: users.address,
         mobile: users.mobile,
+        paymentStatus: users.paymentStatus,
+        paymentAmount: users.paymentAmount,
         createdAt: users.createdAt,
       })
       .from(users)

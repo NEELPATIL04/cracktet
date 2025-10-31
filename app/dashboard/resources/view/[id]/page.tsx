@@ -1,24 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 import ProtectedPDFViewer from "@/components/ProtectedPDFViewer";
 
 interface Resource {
-  id: number;
+  uuid: string;
   title: string;
   description: string;
-  fileName: string;
-  fileSize: string;
-  fileUrl: string;
-  createdAt: string;
 }
 
 interface UserData {
   id: number;
   name: string;
   email: string;
+  mobile: string;
 }
 
 export default function ViewResourcePage() {
@@ -29,14 +26,7 @@ export default function ViewResourcePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    // ✅ Fetch resource directly - API will verify session via httpOnly cookie
-    if (params.id) {
-      fetchResource(params.id as string);
-    }
-  }, [params.id]);
-
-  const fetchResource = async (id: string) => {
+  const fetchResource = useCallback(async (id: string) => {
     try {
       const response = await fetch(`/api/resources/${id}`);
 
@@ -71,7 +61,14 @@ export default function ViewResourcePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // ✅ Fetch resource directly - API will verify session via httpOnly cookie
+    if (params.id) {
+      fetchResource(params.id as string);
+    }
+  }, [params.id, fetchResource]);
 
   if (loading) {
     return (
@@ -116,10 +113,11 @@ export default function ViewResourcePage() {
 
   return (
     <ProtectedPDFViewer
-      pdfUrl={`/api/resources/${resource.id}/stream`}
+      pdfUrl={`/api/resources/${resource.uuid}/stream`}
       resourceTitle={resource.title}
       userName={userData.name}
       userEmail={userData.email}
+      userMobile={userData.mobile}
     />
   );
 }

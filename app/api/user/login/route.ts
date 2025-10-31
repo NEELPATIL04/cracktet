@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is active or payment is completed
-    if (!user.isActive || user.paymentStatus !== "completed") {
+    if (!user.isActive || (user.paymentStatus !== "completed" && user.paymentStatus !== "admin_added")) {
       return NextResponse.json(
         { error: "Your account is not active. Please complete payment or contact admin." },
         { status: 403 }

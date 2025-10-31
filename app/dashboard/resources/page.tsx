@@ -8,6 +8,7 @@ import Link from "next/link";
 
 interface Resource {
   id: number;
+  uuid: string;
   title: string;
   description: string;
   fileName: string;
@@ -203,7 +204,7 @@ export default function ResourcesPage() {
                   </div>
 
                   <Link
-                    href={`/dashboard/resources/view/${resource.id}`}
+                    href={`/dashboard/resources/view/${resource.uuid}`}
                     className="flex items-center justify-center space-x-2 w-full bg-primary hover:bg-primary-dark text-white py-3 px-4 rounded-lg transition-colors font-medium group-hover:shadow-lg"
                   >
                     <FiEye className="w-4 h-4" />

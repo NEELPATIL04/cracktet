@@ -12,12 +12,26 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState("en");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     checkLoginStatus();
   }, [pathname]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isFullscreen === 'boolean') {
+        setIsFullscreen(customEvent.detail.isFullscreen);
+      }
+    };
+
+    window.addEventListener('fullscreenChange', handleFullscreenChange);
+    return () => window.removeEventListener('fullscreenChange', handleFullscreenChange);
+  }, []);
 
   const checkLoginStatus = async () => {
     try {
@@ -51,6 +65,11 @@ export default function Navbar() {
   };
 
   const translations = t[language as keyof typeof t] || t.en;
+
+  // Hide navbar when in fullscreen mode
+  if (isFullscreen) {
+    return null;
+  }
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50 w-full">

@@ -51,6 +51,7 @@ export const transactions = pgTable("transactions", {
 
 export const resources = pgTable("resources", {
   id: serial("id").primaryKey(),
+  uuid: varchar("uuid", { length: 36 }).notNull().unique(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   fileName: varchar("file_name", { length: 255 }).notNull(),

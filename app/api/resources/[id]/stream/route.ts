@@ -21,15 +21,14 @@ export async function GET(
 
     console.log("✅ Stream: Session valid, streaming resource");
 
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
-    console.log("📄 Fetching resource ID:", id);
+    const { id: uuidParam } = await params;
+    console.log("📄 Fetching resource UUID:", uuidParam);
 
-    // Fetch resource (must be active)
+    // Fetch resource by UUID (must be active)
     const [resource] = await db
       .select()
       .from(resources)
-      .where(and(eq(resources.id, id), eq(resources.isActive, true)))
+      .where(and(eq(resources.uuid, uuidParam), eq(resources.isActive, true)))
       .limit(1);
 
     if (!resource) {

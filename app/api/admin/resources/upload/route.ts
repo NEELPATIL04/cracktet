@@ -4,6 +4,7 @@ import { resources } from "@/db/schema";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
+import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,10 +74,11 @@ export async function POST(request: NextRequest) {
     // Calculate file size
     const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
 
-    // Save to database
+    // Save to database with UUID
     const [newResource] = await db
       .insert(resources)
       .values({
+        uuid: randomUUID(),
         title,
         description: description || "",
         fileName: originalName,

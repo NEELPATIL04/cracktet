@@ -23,10 +23,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid session" }, { status: 401 });
     }
 
-    // Fetch only active resources
+    // Fetch only active resources with UUID
     const activeResources = await db
       .select({
         id: resources.id,
+        uuid: resources.uuid,
         title: resources.title,
         description: resources.description,
         fileName: resources.fileName,

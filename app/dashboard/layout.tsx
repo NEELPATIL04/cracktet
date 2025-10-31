@@ -164,11 +164,11 @@ export default function DashboardLayout({
           } ${isPDFViewerPage ? 'hidden lg:flex' : 'lg:translate-x-0'}`}
         >
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-200 relative">
+        <div className="p-6 border-b border-gray-100">
           {!sidebarCollapsed ? (
             <>
-              <h2 className="text-xl font-bold text-primary">My Dashboard</h2>
-              <p className="text-sm text-gray-500 mt-1 truncate">Welcome, {user?.name}</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">My Dashboard</h2>
+              <p className="text-gray-500">Welcome, {user?.name}</p>
             </>
           ) : (
             <div className="flex justify-center">
@@ -177,37 +177,44 @@ export default function DashboardLayout({
               </div>
             </div>
           )}
-
-          {/* Collapse Arrow - Top Right Corner */}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="absolute top-2 right-2 p-1.5 hover:bg-gray-100 rounded-md transition-colors hidden lg:block"
-            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {sidebarCollapsed ? (
-              <FiChevronRight className="w-4 h-4 text-gray-600" />
-            ) : (
-              <FiChevronLeft className="w-4 h-4 text-gray-600" />
-            )}
-          </button>
         </div>
 
         {/* Menu Items */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-6">
           <Link
             href="/dashboard/resources"
             onClick={() => setSidebarOpen(false)}
-            className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg transition-colors ${
+            className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-4 rounded-lg transition-colors group ${
               pathname?.includes('/dashboard/resources')
-                ? "bg-primary text-white"
-                : "hover:bg-gray-100 text-gray-700"
+                ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
+                : "hover:bg-gray-50 text-gray-600"
             }`}
             title="Resources"
           >
             <FiFile className="w-5 h-5" />
-            {!sidebarCollapsed && <span className="font-medium">Resources</span>}
+            {!sidebarCollapsed && <span className="font-medium text-lg">Resources</span>}
           </Link>
         </nav>
+
+        {/* Logout Button - Bottom */}
+        <div className="p-6 border-t border-gray-100">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-sm">
+              {user?.name?.charAt(0) || "U"}
+            </div>
+            {!sidebarCollapsed && (
+              <div className="flex items-center space-x-2">
+                <span className="font-medium">Logout</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+            )}
+          </button>
+        </div>
         </aside>
       )}
 
@@ -220,7 +227,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content */}
-      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${isPDFViewerPage ? 'left-0 lg:left-64' : (sidebarVisible ? (sidebarCollapsed ? 'left-16' : 'left-64') : 'left-0')} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
+      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${!sidebarVisible ? 'left-0' : (isPDFViewerPage ? 'left-0 lg:left-64' : (sidebarCollapsed ? 'left-16' : 'left-64'))} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
         <div className={`w-full h-full ${isPDFViewerPage ? '' : 'overflow-auto p-6'}`}>
           {children}
         </div>

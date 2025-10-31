@@ -455,12 +455,13 @@ export default function Admin() {
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                        user.paymentStatus === 'admin_added' ? 'bg-blue-100 text-blue-800' :
                         user.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
                         user.paymentStatus === 'initiated' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {user.paymentStatus === 'completed' && <FaRupeeSign className="mr-1" />}
-                        {user.paymentStatus || 'pending'}
+                        {(user.paymentStatus === 'completed' || user.paymentStatus === 'admin_added') && <FaRupeeSign className="mr-1" />}
+                        {user.paymentStatus === 'admin_added' ? 'Admin Added' : (user.paymentStatus || 'pending')}
                         {user.paymentAmount && user.paymentStatus === 'completed' && ` (₹${user.paymentAmount})`}
                       </span>
                     </td>
@@ -546,12 +547,13 @@ export default function Admin() {
                     </span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       user.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                      user.paymentStatus === 'admin_added' ? 'bg-blue-100 text-blue-800' :
                       user.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
                       user.paymentStatus === 'initiated' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {user.paymentStatus === 'completed' && <FaRupeeSign className="mr-1" />}
-                      {user.paymentStatus || 'pending'}
+                      {(user.paymentStatus === 'completed' || user.paymentStatus === 'admin_added') && <FaRupeeSign className="mr-1" />}
+                      {user.paymentStatus === 'admin_added' ? 'Admin Added' : (user.paymentStatus || 'pending')}
                     </span>
                   </div>
                   <div className="flex justify-between">
