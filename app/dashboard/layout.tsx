@@ -180,7 +180,7 @@ export default function DashboardLayout({
           } ${isPDFViewerPage ? 'hidden lg:flex' : 'lg:translate-x-0'}`}
         >
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="pt-24 p-6 border-b border-gray-100">
           {!sidebarCollapsed ? (
             <>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">My Dashboard</h2>
