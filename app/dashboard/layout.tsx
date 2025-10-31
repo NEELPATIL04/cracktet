@@ -59,6 +59,22 @@ export default function DashboardLayout({
     return () => window.removeEventListener('fullscreenChange', handleFullscreenChange);
   }, []);
 
+  // Reset navbar and sidebar visibility when navigating away from PDF viewer
+  useEffect(() => {
+    console.log('Path changed:', pathname, 'isPDFViewerPage:', isPDFViewerPage);
+    if (!isPDFViewerPage) {
+      console.log('Not on PDF viewer page, restoring UI elements');
+      console.log('Setting navbarVisible and sidebarVisible to true');
+      
+      // Force immediate restoration
+      setTimeout(() => {
+        setNavbarVisible(true);
+        setSidebarVisible(true);
+        console.log('UI elements restored after timeout');
+      }, 100);
+    }
+  }, [isPDFViewerPage, pathname]);
+
   const checkAuth = async () => {
     try {
       const response = await fetch("/api/user/verify");

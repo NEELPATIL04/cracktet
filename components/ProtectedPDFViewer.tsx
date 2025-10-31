@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiZoomIn, FiZoomOut, FiMaximize, FiMinimize, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiZoomIn, FiZoomOut, FiX } from "react-icons/fi";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProtectedPDFViewerProps {
@@ -20,7 +20,6 @@ export default function ProtectedPDFViewer({
   userEmail,
   userMobile,
 }: ProtectedPDFViewerProps) {
-  console.log("🚀 ProtectedPDFViewer mounted with:", { pdfUrl, resourceTitle, userName, userEmail, userMobile });
 
   const router = useRouter();
   const { t } = useLanguage();
@@ -39,12 +38,15 @@ export default function ProtectedPDFViewer({
   const [warningMessage, setWarningMessage] = useState("");
   const [showInitialWarning, setShowInitialWarning] = useState(true);
   const [pdfReady, setPdfReady] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages] = useState(0); // TODO: Implement total page detection
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [overlayBlack, setOverlayBlack] = useState(false);
 
   // Load PDF as blob
   useEffect(() => {
     const loadPDF = async () => {
       try {
-        console.log("📄 Fetching PDF from:", pdfUrl);
         const response = await fetch(pdfUrl);
 
         if (!response.ok) {
@@ -61,10 +63,7 @@ export default function ProtectedPDFViewer({
         }
 
         const blob = await response.blob();
-        console.log("✅ PDF blob received, size:", blob.size);
-
         const url = URL.createObjectURL(blob);
-        console.log("✅ PDF loaded as blob URL:", url);
 
         setPdfBlobUrl(url);
         setPdfReady(true);
@@ -84,6 +83,121 @@ export default function ProtectedPDFViewer({
       }
     };
   }, [pdfUrl]);
+
+  // ✅ Auto-enter browser fullscreen when PDF is ready (more reliable)
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      // Wait a small moment for DOM to be ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      try {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if ((document.documentElement as any).webkitRequestFullscreen) {
+          await (document.documentElement as any).webkitRequestFullscreen();
+        } else if ((document.documentElement as any).msRequestFullscreen) {
+          await (document.documentElement as any).msRequestFullscreen();
+        }
+      } catch (error) {
+        // Show user a manual fullscreen button if auto-fullscreen fails
+        setWarningMessage("Click the fullscreen button to enter fullscreen mode");
+        setShowWarningPopup(true);
+        setTimeout(() => setShowWarningPopup(false), 4000);
+      }
+    };
+
+    // Only try to enter fullscreen when PDF is actually ready
+    if (pdfReady && pdfBlobUrl && !showInitialWarning) {
+      enterFullscreen();
+    }
+  }, [pdfReady, pdfBlobUrl, showInitialWarning]); // Triggered when PDF becomes ready
+
+  // ✅ Keyboard navigation for pages and overlay control
+  useEffect(() => {
+    const handleKeyboardNav = (e: KeyboardEvent) => {
+      // Navigation keys - don't blacken overlay
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        if (currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
+        return;
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+        e.preventDefault();
+        setCurrentPage(currentPage + 1);
+        return;
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        setCurrentPage(1);
+        return;
+      } else if (e.key === 'End' && totalPages > 0) {
+        e.preventDefault();
+        setCurrentPage(totalPages);
+        return;
+      } else if (e.key === 'Escape') {
+        // Allow escape for fullscreen exit
+        return;
+      }
+      
+      // Any other key press - make overlay black
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("🔒 SCREEN TURNING BLACK - Key pressed:", e.key);
+      console.log("Setting overlayBlack to true");
+      setOverlayBlack(true);
+      setWarningMessage("Double-click anywhere to restore content");
+      setShowWarningPopup(true);
+      
+      // Make sure we don't trigger other blur effects
+      setIsBlurred(false);
+    };
+
+    if (pdfBlobUrl) {
+      // Use capture phase to intercept before other handlers
+      document.addEventListener('keydown', handleKeyboardNav, { capture: true });
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardNav, { capture: true });
+    };
+  }, [currentPage, pdfBlobUrl, totalPages]);
+
+  // ✅ Listen for fullscreen changes from browser API
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      // If user exits fullscreen, exit the PDF and go back
+      if (!isCurrentlyFullscreen) {
+        router.push("/dashboard/resources");
+        return;
+      }
+      
+      // Notify parent components
+      if (typeof window !== 'undefined') {
+        const event = new CustomEvent('fullscreenChange', {
+          detail: { isFullscreen: isCurrentlyFullscreen },
+          bubbles: true
+        });
+        window.dispatchEvent(event);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, [router]);
 
   // ✅ Detect DevTools opening
   useEffect(() => {
@@ -184,11 +298,10 @@ export default function ProtectedPDFViewer({
     if (!isFullscreen) return;
 
     const blockF12 = (e: KeyboardEvent) => {
-      if (e.key === "F12" || e.keyCode === 123) {
+      if (e.key === "F12" || e.code === "F12") {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        console.log("🚫 F12 blocked in fullscreen");
         setWarningMessage("Developer tools are disabled in fullscreen mode");
         setShowWarningPopup(true);
         setTimeout(() => setShowWarningPopup(false), 3000);
@@ -212,7 +325,6 @@ export default function ProtectedPDFViewer({
   useEffect(() => {
 
     const blockRightClick = (e: Event) => {
-      console.log("🚫 Right-click detected, blocking...", e.type, e.target);
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -223,10 +335,8 @@ export default function ProtectedPDFViewer({
     };
 
     const blockMouseDown = (e: MouseEvent) => {
-      console.log("🔍 Mouse down detected:", e.button, "Ctrl:", e.ctrlKey, "Meta:", e.metaKey);
       // Block right-click (button 2) and Ctrl+click (Mac right-click)
       if (e.button === 2 || (e.button === 0 && e.ctrlKey)) {
-        console.log("🚫 Right-click mousedown blocked on resource page");
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -319,8 +429,6 @@ export default function ProtectedPDFViewer({
         setShowViolationPopup(true);
         setIsBlurred(true);
         
-        console.log("🚫 Screenshot attempt detected:", e.key, e.metaKey, e.shiftKey, e.altKey);
-        
         // Log violation to API
         fetch("/api/resources/log-violation", {
           method: "POST",
@@ -354,8 +462,6 @@ export default function ProtectedPDFViewer({
       const now = Date.now();
       if (now - lastBlurTime < 2000) return; // Debounce
       lastBlurTime = now;
-      
-      console.log("⚠️ Window lost focus - possible screenshot tool");
       setWarningMessage("Suspicious activity detected");
       setShowWarningPopup(true);
       setTimeout(() => setShowWarningPopup(false), 2000);
@@ -367,7 +473,6 @@ export default function ProtectedPDFViewer({
         if (navigator.clipboard && navigator.clipboard.read) {
           // This will trigger permission request, alerting us to clipboard access
           await navigator.clipboard.read();
-          console.log("⚠️ Clipboard access detected");
         }
       } catch (e) {
         // Expected - most screenshot tools will be blocked here
@@ -379,7 +484,6 @@ export default function ProtectedPDFViewer({
     const detectVisibilityChange = () => {
       visibilityChangeCount++;
       if (visibilityChangeCount > 3) {
-        console.log("⚠️ Multiple visibility changes - possible screenshot tool");
         setWarningMessage("Suspicious activity detected");
         setShowWarningPopup(true);
         setTimeout(() => setShowWarningPopup(false), 2000);
@@ -409,6 +513,149 @@ export default function ProtectedPDFViewer({
       clearInterval(clipboardInterval);
     };
   }, [violationCount, router]);
+
+  // ✅ Global download blocker - prevents navigation to file-like links
+  useEffect(() => {
+    const blockDownloads = (e: Event) => {
+      const target = e.target as HTMLElement;
+      
+      // Check if it's a link or has href
+      if (target.tagName === 'A' || target.closest('a')) {
+        const link = target.tagName === 'A' ? target as HTMLAnchorElement : target.closest('a') as HTMLAnchorElement;
+        const href = link?.href || '';
+        
+        // Block file extensions commonly used for downloads
+        const fileExtensions = [
+          '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+          '.zip', '.rar', '.7z', '.tar', '.gz',
+          '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg',
+          '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv',
+          '.txt', '.csv', '.json', '.xml', '.html',
+          '.exe', '.msi', '.dmg', '.deb', '.rpm',
+          '.apk', '.ipa'
+        ];
+        
+        // Check if URL contains file extensions or download patterns
+        const hasFileExtension = fileExtensions.some(ext => href.toLowerCase().includes(ext));
+        const hasDownloadPattern = href.toLowerCase().includes('download') || 
+                                  href.toLowerCase().includes('attachment') ||
+                                  href.toLowerCase().includes('export') ||
+                                  href.toLowerCase().includes('stream');
+        
+        if (hasFileExtension || hasDownloadPattern) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          
+          setWarningMessage("Downloads are disabled on protected content");
+          setShowWarningPopup(true);
+          setTimeout(() => setShowWarningPopup(false), 3000);
+          
+          // Log violation
+          fetch("/api/resources/log-violation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "download_attempt",
+              details: `Blocked download: ${href}`,
+              timestamp: new Date().toISOString(),
+            }),
+          }).catch(() => {});
+          
+          return false;
+        }
+      }
+      
+      // Also block any programmatic download attempts
+      if (target.hasAttribute && target.hasAttribute('download')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    // Add listeners for various events that could trigger downloads
+    document.addEventListener("click", blockDownloads, { capture: true, passive: false });
+    document.addEventListener("auxclick", blockDownloads, { capture: true, passive: false }); // Middle click
+    window.addEventListener("click", blockDownloads, { capture: true, passive: false });
+    
+    // Block programmatic navigation to file URLs
+    const originalOpen = window.open;
+    window.open = function(url?: string | URL, target?: string, features?: string) {
+      if (url) {
+        const urlStr = url.toString().toLowerCase();
+        const fileExtensions = ['.pdf', '.doc', '.docx', '.zip', '.rar'];
+        if (fileExtensions.some(ext => urlStr.includes(ext)) || urlStr.includes('download')) {
+          setWarningMessage("Downloads are disabled on protected content");
+          setShowWarningPopup(true);
+          setTimeout(() => setShowWarningPopup(false), 3000);
+          return null;
+        }
+      }
+      return originalOpen.call(window, url, target, features);
+    };
+    
+    // Block iframe navigation and other navigation attempts
+    const blockNavigation = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IFRAME') {
+        const iframe = target as HTMLIFrameElement;
+        const src = iframe.src || '';
+        const fileExtensions = ['.pdf', '.doc', '.docx', '.zip', '.rar'];
+        if (fileExtensions.some(ext => src.toLowerCase().includes(ext)) && 
+            !src.includes(pdfBlobUrl)) { // Allow our own PDF blob
+          e.preventDefault();
+          e.stopPropagation();
+          setWarningMessage("Downloads are disabled on protected content");
+          setShowWarningPopup(true);
+          setTimeout(() => setShowWarningPopup(false), 3000);
+        }
+      }
+    };
+    
+    // Listen for beforeunload to catch navigation attempts
+    const blockUnload = (_e: BeforeUnloadEvent) => {
+      // We'll allow normal navigation but could add checks here if needed
+    };
+    
+    window.addEventListener('beforeunload', blockUnload);
+    document.addEventListener('load', blockNavigation, { capture: true });
+
+    // Block blob URL creation attempts (prevents saving PDFs as blobs)
+    const originalCreateObjectURL = URL.createObjectURL;
+    URL.createObjectURL = function(object: Blob | MediaSource) {
+      // Allow our own PDF blob but block others during sensitive operations
+      if (object instanceof Blob && object.type === 'application/pdf') {
+        // We allow our own PDF loading but could add additional checks here
+      }
+      return originalCreateObjectURL.call(URL, object);
+    };
+    
+    // Block clipboard operations that might save file data
+    const blockClipboardWrite = async (e: ClipboardEvent) => {
+      e.preventDefault();
+      setWarningMessage("Copying content is disabled");
+      setShowWarningPopup(true);
+      setTimeout(() => setShowWarningPopup(false), 2000);
+    };
+    
+    document.addEventListener("copy", blockClipboardWrite, { capture: true });
+    document.addEventListener("cut", blockClipboardWrite, { capture: true });
+
+    return () => {
+      document.removeEventListener("click", blockDownloads, { capture: true });
+      document.removeEventListener("auxclick", blockDownloads, { capture: true });
+      window.removeEventListener("click", blockDownloads, { capture: true });
+      document.removeEventListener("copy", blockClipboardWrite, { capture: true });
+      document.removeEventListener("cut", blockClipboardWrite, { capture: true });
+      window.removeEventListener('beforeunload', blockUnload);
+      document.removeEventListener('load', blockNavigation, { capture: true });
+      
+      // Restore original functions
+      window.open = originalOpen;
+      URL.createObjectURL = originalCreateObjectURL;
+    };
+  }, [pdfBlobUrl]);
 
   // ✅ Enhanced protection against screenshots and downloads
   useEffect(() => {
@@ -443,31 +690,58 @@ export default function ProtectedPDFViewer({
       
       // ESC key to exit fullscreen
       if (e.key === "Escape" && isFullscreen) {
-        toggleFullscreen();
+        // Exit fullscreen when ESC is pressed
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          (document as any).msExitFullscreen();
+        }
         return;
       }
 
       const forbiddenKeys = [
-        e.ctrlKey && e.key === "s",
-        e.ctrlKey && e.key === "S",
-        e.ctrlKey && e.key === "p",
-        e.ctrlKey && e.key === "P",
-        e.ctrlKey && e.key === "c",
-        e.ctrlKey && e.key === "C",
-        e.ctrlKey && e.key === "a",
-        e.ctrlKey && e.key === "A",
+        // Save shortcuts (Ctrl+S, Cmd+S)
+        e.ctrlKey && (e.key === "s" || e.key === "S"),
+        e.metaKey && (e.key === "s" || e.key === "S"),
+        
+        // Print shortcuts (Ctrl+P, Cmd+P)
+        e.ctrlKey && (e.key === "p" || e.key === "P"),
+        e.metaKey && (e.key === "p" || e.key === "P"),
+        
+        // Copy shortcuts (Ctrl+C, Cmd+C)
+        e.ctrlKey && (e.key === "c" || e.key === "C"),
+        e.metaKey && (e.key === "c" || e.key === "C"),
+        
+        // Select all (Ctrl+A, Cmd+A)
+        e.ctrlKey && (e.key === "a" || e.key === "A"),
+        e.metaKey && (e.key === "a" || e.key === "A"),
+        
+        // Download shortcuts (Ctrl+J, Cmd+J for downloads page)
+        e.ctrlKey && (e.key === "j" || e.key === "J"),
+        e.metaKey && (e.key === "j" || e.key === "J"),
+        
+        // Save As shortcuts (Ctrl+Shift+S, Cmd+Shift+S)
+        e.ctrlKey && e.shiftKey && (e.key === "s" || e.key === "S"),
+        e.metaKey && e.shiftKey && (e.key === "s" || e.key === "S"),
+        
+        // Browser menu shortcuts that could lead to save
+        e.altKey && (e.key === "f" || e.key === "F"), // Alt+F (File menu)
+        e.altKey && (e.key === "e" || e.key === "E"), // Alt+E (Edit menu)
+        
+        // Screenshot shortcuts
         e.key === "PrintScreen",
-        e.ctrlKey && e.shiftKey && e.key === "I",
-        e.ctrlKey && e.shiftKey && e.key === "i",
-        e.ctrlKey && e.shiftKey && e.key === "J",
-        e.ctrlKey && e.shiftKey && e.key === "j",
-        e.ctrlKey && e.shiftKey && e.key === "C",
-        e.ctrlKey && e.shiftKey && e.key === "c",
+        
+        // Developer tools
+        e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i"),
+        e.ctrlKey && e.shiftKey && (e.key === "J" || e.key === "j"),
+        e.ctrlKey && e.shiftKey && (e.key === "C" || e.key === "c"),
         e.key === "F12",
-        e.metaKey && e.key === "s",
-        e.metaKey && e.key === "S",
-        e.metaKey && e.key === "p",
-        e.metaKey && e.key === "P",
+        
+        // View source (Ctrl+U, Cmd+Option+U)
+        e.ctrlKey && (e.key === "u" || e.key === "U"),
+        e.metaKey && e.altKey && (e.key === "u" || e.key === "U"),
       ];
 
       if (forbiddenKeys.some((condition) => condition)) {
@@ -512,7 +786,7 @@ export default function ProtectedPDFViewer({
     };
   }, [resourceTitle, isFullscreen, t]);
 
-  // ✅ Disable print media query
+  // ✅ Disable print media query and add protective layer styles
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
@@ -524,6 +798,39 @@ export default function ProtectedPDFViewer({
         -moz-user-select: none !important;
         -ms-user-select: none !important;
         user-select: none !important;
+        -webkit-touch-callout: none !important;
+        pointer-events: none !important; /* Disable all iframe interactions */
+        overflow: hidden !important; /* Disable scrolling */
+      }
+      /* Allow PDF container to size properly */
+      .pdf-container {
+        overflow: hidden !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      /* Protective layer styles */
+      .pdf-protective-layer {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 9999999 !important;
+        pointer-events: auto !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        -webkit-touch-callout: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      /* Prevent selection on PDF container */
+      .pdf-container * {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
         -webkit-touch-callout: none !important;
       }
     `;
@@ -537,27 +844,6 @@ export default function ProtectedPDFViewer({
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 10, 200));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 10, 50));
-
-  const toggleFullscreen = () => {
-    const newFullscreenState = !isFullscreen;
-    console.log('Toggling fullscreen to:', newFullscreenState);
-    setIsFullscreen(newFullscreenState);
-    
-    // Clear devtools warning when entering fullscreen
-    if (newFullscreenState) {
-      setDevToolsOpen(false);
-    }
-    
-    // Notify parent to hide/show navbar
-    if (typeof window !== 'undefined') {
-      const event = new CustomEvent('fullscreenChange', {
-        detail: { isFullscreen: newFullscreenState },
-        bubbles: true
-      });
-      console.log('Dispatching fullscreen event:', event.detail);
-      window.dispatchEvent(event);
-    }
-  };
 
   // Add mouse wheel / touchpad zoom support (Ctrl+Scroll and pinch)
   useEffect(() => {
@@ -666,6 +952,40 @@ export default function ProtectedPDFViewer({
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-[100]' : 'relative w-full h-full'} bg-white flex flex-col`}>
+      {/* Prominent Back Button - Fixed at top left */}
+      <div className="absolute top-4 left-4 z-40">
+        <button
+          onClick={async () => {
+            // Exit fullscreen first if in fullscreen mode
+            if (isFullscreen) {
+              try {
+                if (document.exitFullscreen) {
+                  await document.exitFullscreen();
+                } else if ((document as any).webkitExitFullscreen) {
+                  await (document as any).webkitExitFullscreen();
+                } else if ((document as any).msExitFullscreen) {
+                  await (document as any).msExitFullscreen();
+                }
+                // Wait a moment for fullscreen to exit before navigating
+                setTimeout(() => {
+                  router.push("/dashboard/resources");
+                }, 100);
+              } catch (error) {
+                // Navigate anyway if fullscreen exit fails
+                router.push("/dashboard/resources");
+              }
+            } else {
+              // Navigate directly if not in fullscreen
+              router.push("/dashboard/resources");
+            }
+          }}
+          className="flex items-center space-x-2 bg-white hover:bg-gray-50 text-gray-800 px-4 py-3 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
+          title="Back to Resources"
+        >
+          <FiArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Resources</span>
+        </button>
+      </div>
       {/* Initial Warning Popup - Shows for 4 seconds */}
       {showInitialWarning && pdfReady && (
         <div className="fixed inset-0 z-[200] bg-black bg-opacity-95 flex items-center justify-center p-4">
@@ -784,15 +1104,8 @@ export default function ProtectedPDFViewer({
         </div>
       )}
 
-      {/* Floating Toolbar - Fixed to bottom-right */}
-      <div className="fixed bottom-4 right-4 z-30 bg-primary text-white rounded-md shadow-lg flex items-center gap-1 px-2 py-1.5">
-        <button
-          onClick={() => router.push("/dashboard/resources")}
-          className="p-1.5 hover:bg-white/20 rounded"
-          title="Back to Resources"
-        >
-          <FiArrowLeft className="w-5 h-5" />
-        </button>
+      {/* Floating Toolbar - Fixed to bottom-right (Zoom controls only) */}
+      <div className="fixed bottom-4 right-4 bg-primary text-white rounded-md shadow-lg flex items-center gap-1 px-2 py-1.5" style={{ zIndex: 99999999 }}>
         <button
           onClick={handleZoomOut}
           disabled={scale <= 50}
@@ -809,13 +1122,6 @@ export default function ProtectedPDFViewer({
           title="Zoom In (Ctrl+Scroll or Pinch)"
         >
           <FiZoomIn className="w-5 h-5" />
-        </button>
-        <button
-          onClick={toggleFullscreen}
-          className="p-1.5 hover:bg-white/20 rounded"
-          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        >
-          {isFullscreen ? <FiMinimize className="w-5 h-5" /> : <FiMaximize className="w-5 h-5" />}
         </button>
       </div>
 
@@ -860,13 +1166,159 @@ export default function ProtectedPDFViewer({
               ))}
             </div>
 
-            {/* PDF iframe with its own scrollbar */}
+            {/* PDF iframe with page navigation */}
             {pdfBlobUrl && (
-              <iframe
-                src={`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=1`}
-                className="w-full h-full border-0"
-                title={resourceTitle}
-              />
+              <div className="relative w-full h-full pdf-container">
+                <iframe
+                  ref={iframeRef}
+                  src={`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=page-fit&page=${currentPage}`}
+                  className="w-full h-full border-0"
+                  title={resourceTitle}
+                  style={{ 
+                    overflow: 'hidden'
+                  }}
+                  key={`pdf-page-${currentPage}`} // Force re-render on page change
+                />
+                
+                {/* Protective Layer - Transparent or Black based on keyboard activity */}
+                <div 
+                  className="pdf-protective-layer cursor-default"
+                  style={{
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    msUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    pointerEvents: 'auto', // Capture all pointer events
+                    backgroundColor: (console.log("🎨 Background color:", overlayBlack ? '#000000' : 'transparent'), overlayBlack ? '#000000' : 'transparent'),
+                    transition: 'background-color 0.3s ease'
+                  } as React.CSSProperties}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setWarningMessage("Right-click is disabled on protected content");
+                    setShowWarningPopup(true);
+                    setTimeout(() => setShowWarningPopup(false), 3000);
+                    return false;
+                  }}
+                  onMouseDown={(e: React.MouseEvent) => {
+                    // Block all mouse down events on the PDF
+                    if (e.button === 2 || (e.button === 0 && e.ctrlKey)) { // Right click or Ctrl+click
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setWarningMessage("Interactions are disabled on protected content");
+                      setShowWarningPopup(true);
+                      setTimeout(() => setShowWarningPopup(false), 2000);
+                      return false;
+                    }
+                  }}
+                  {...{
+                    onSelectStart: (e: Event) => {
+                      // Block text selection
+                      e.preventDefault();
+                      return false;
+                    }
+                  } as any}
+                  onDragStart={(e) => {
+                    // Block drag operations
+                    e.preventDefault();
+                    return false;
+                  }}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    if (overlayBlack) {
+                      // Double-click to restore content
+                      console.log("⚪ DOUBLE-CLICK DETECTED - Restoring content");
+                      setOverlayBlack(false);
+                      setShowWarningPopup(false);
+                    }
+                    return false;
+                  }}
+                  onTouchStart={(e) => {
+                    // Block touch scrolling
+                    e.preventDefault();
+                    setWarningMessage("Use navigation buttons to change pages");
+                    setShowWarningPopup(true);
+                    setTimeout(() => setShowWarningPopup(false), 2000);
+                  }}
+                  onWheel={(e) => {
+                    // Block wheel scrolling
+                    e.preventDefault();
+                    setWarningMessage("Use navigation buttons or arrow keys to navigate");
+                    setShowWarningPopup(true);
+                    setTimeout(() => setShowWarningPopup(false), 2000);
+                  }}
+                  onScroll={(e) => {
+                    // Block scroll events
+                    e.preventDefault();
+                  }}
+                  title="Protected Content - Interactions Disabled"
+                >
+                  {/* Overlay content - shows message when black */}
+                  {overlayBlack ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-6xl mb-4">🚫</div>
+                        <p className="text-white text-2xl font-bold mb-2">Content Hidden</p>
+                        <p className="text-gray-300 text-lg">Unauthorized keyboard activity detected</p>
+                        <p className="text-yellow-400 text-lg font-semibold mt-4">👆 Double-click anywhere to restore content</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center opacity-0 hover:opacity-5 transition-opacity duration-1000">
+                      <div className="text-gray-400 text-sm font-medium bg-white bg-opacity-90 px-3 py-1 rounded">
+                        Protected Content
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Navigation Buttons */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200" style={{ zIndex: 99999999 }}>
+                  <button
+                    onClick={() => {
+                      if (currentPage > 1) {
+                        setCurrentPage(currentPage - 1);
+                      }
+                    }}
+                    disabled={currentPage <= 1}
+                    className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    title="Previous Page"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <span>Page</span>
+                    <input
+                      type="number"
+                      value={currentPage}
+                      onChange={(e) => {
+                        const page = Math.max(1, parseInt(e.target.value) || 1);
+                        setCurrentPage(page);
+                      }}
+                      className="w-12 px-2 py-1 border border-gray-300 rounded text-center"
+                      min="1"
+                    />
+                    <span>of {totalPages || '?'}</span>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setCurrentPage(currentPage + 1);
+                    }}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-all"
+                    title="Next Page"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
