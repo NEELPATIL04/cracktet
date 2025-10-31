@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiZoomIn, FiZoomOut, FiMaximize, FiMinimize } from "react-icons/fi";
+import { FiArrowLeft, FiZoomIn, FiZoomOut, FiMaximize, FiMinimize, FiX } from "react-icons/fi";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProtectedPDFViewerProps {
   pdfUrl: string;
@@ -20,13 +21,22 @@ export default function ProtectedPDFViewer({
   console.log("🚀 ProtectedPDFViewer mounted with:", { pdfUrl, resourceTitle, userName, userEmail });
 
   const router = useRouter();
+  const { t } = useLanguage();
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isBlurred, setIsBlurred] = useState(false);
   const [devToolsOpen, setDevToolsOpen] = useState(false);
+  const [devToolsShownOnce, setDevToolsShownOnce] = useState(false);
   const [scale, setScale] = useState(100);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showViolationPopup, setShowViolationPopup] = useState(false);
+  const [violationCount, setViolationCount] = useState(0);
+  const [showWarningPopup, setShowWarningPopup] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [showInitialWarning, setShowInitialWarning] = useState(true);
+  const [pdfReady, setPdfReady] = useState(false);
 
   // Load PDF as blob
   useEffect(() => {
@@ -55,10 +65,11 @@ export default function ProtectedPDFViewer({
         console.log("✅ PDF loaded as blob URL:", url);
 
         setPdfBlobUrl(url);
+        setPdfReady(true);
         setLoading(false);
-      } catch (err: any) {
+      } catch (err) {
         console.error("❌ Error loading PDF:", err);
-        setError(err.message || "Failed to load PDF");
+        setError(err instanceof Error ? err.message : "Failed to load PDF");
         setLoading(false);
       }
     };
@@ -80,10 +91,12 @@ export default function ProtectedPDFViewer({
       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
 
       if (widthThreshold || heightThreshold) {
-        setDevToolsOpen(true);
+        if (!devToolsShownOnce) {
+          setDevToolsOpen(true);
+          setDevToolsShownOnce(true);
+          setTimeout(() => setDevToolsOpen(false), 5000); // Hide after 5 seconds
+        }
         console.clear();
-      } else {
-        setDevToolsOpen(false);
       }
     };
 
@@ -91,30 +104,82 @@ export default function ProtectedPDFViewer({
     return () => clearInterval(interval);
   }, [resourceTitle]);
 
-  // ✅ Screenshot protection - ONLY for PrintScreen key
+  // ✅ Enhanced screenshot protection
   useEffect(() => {
-    const handleKeyUp = (e: KeyboardEvent) => {
-      // Detect PrintScreen key ONLY
-      if (e.key === "PrintScreen") {
-        navigator.clipboard.writeText("Screenshot is disabled on this content");
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block all screenshot shortcuts
+      const screenshotKeys = [
+        e.key === "PrintScreen",
+        // Windows Snipping Tool (Win+Shift+S)
+        (e.key === "s" || e.key === "S") && e.shiftKey && e.metaKey,
+        (e.key === "s" || e.key === "S") && e.shiftKey && e.ctrlKey,
+        // Mac screenshot shortcuts
+        e.metaKey && e.shiftKey && e.key === "3",
+        e.metaKey && e.shiftKey && e.key === "4",
+        e.metaKey && e.shiftKey && e.key === "5",
+        e.key === "F13", // Mac Print Screen equivalent
+      ];
+
+      if (screenshotKeys.some(condition => condition)) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const newCount = violationCount + 1;
+        setViolationCount(newCount);
+        setShowViolationPopup(true);
         setIsBlurred(true);
-        setTimeout(() => setIsBlurred(false), 2000);
+
+        // Log violation to API
+        fetch('/api/log-violation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'screenshot_attempt',
+            userEmail,
+            userName,
+            resourceTitle,
+            violationNumber: newCount,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(err => console.error('Failed to log violation:', err));
+
+        navigator.clipboard.writeText("Screenshot is disabled - Violation recorded");
+
+        // Check if 3 strikes reached
+        if (newCount >= 3) {
+          setTimeout(() => {
+            // Force logout
+            fetch('/api/user/logout', { method: 'POST' })
+              .then(() => {
+                window.location.href = '/login?reason=violations';
+              });
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            setIsBlurred(false);
+            setShowViolationPopup(false);
+          }, 3000);
+        }
+
+        return false;
       }
     };
 
-    document.addEventListener("keyup", handleKeyUp);
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
 
     return () => {
-      document.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("keydown", handleKeyDown, { capture: true });
     };
-  }, [resourceTitle]);
+  }, [violationCount]);
 
   // ✅ Enhanced protection against screenshots and downloads
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      alert("❌ Right-click is disabled on this content");
+      setWarningMessage(t.pdfViewer.warnings.rightClick);
+      setShowWarningPopup(true);
+      setTimeout(() => setShowWarningPopup(false), 2000);
       return false;
     };
 
@@ -151,7 +216,9 @@ export default function ProtectedPDFViewer({
       if (forbiddenKeys.some((condition) => condition)) {
         e.preventDefault();
         e.stopPropagation();
-        alert("❌ This action is disabled for content protection");
+        setWarningMessage(t.pdfViewer.warnings.actionDisabled);
+        setShowWarningPopup(true);
+        setTimeout(() => setShowWarningPopup(false), 2000);
         return false;
       }
     };
@@ -169,7 +236,9 @@ export default function ProtectedPDFViewer({
 
     const handleCopy = (e: ClipboardEvent) => {
       e.preventDefault();
-      alert("❌ Copying is disabled on this content");
+      setWarningMessage(t.pdfViewer.warnings.copyDisabled);
+      setShowWarningPopup(true);
+      setTimeout(() => setShowWarningPopup(false), 2000);
       return false;
     };
 
@@ -186,7 +255,7 @@ export default function ProtectedPDFViewer({
       document.removeEventListener("selectstart", handleSelectStart);
       document.removeEventListener("copy", handleCopy);
     };
-  }, [resourceTitle, isFullscreen]);
+  }, [resourceTitle, isFullscreen, t]);
 
   // ✅ Disable print media query
   useEffect(() => {
@@ -204,14 +273,105 @@ export default function ProtectedPDFViewer({
       }
     `;
     document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
   }, []);
 
   // Disabled - was causing unwanted blurring when touching PDF
 
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 10, 200));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 10, 50));
-  const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+
+  const toggleFullscreen = () => {
+    const newFullscreenState = !isFullscreen;
+    console.log('Toggling fullscreen to:', newFullscreenState);
+    setIsFullscreen(newFullscreenState);
+    // Notify parent to hide/show navbar
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('fullscreenChange', {
+        detail: { isFullscreen: newFullscreenState },
+        bubbles: true
+      });
+      console.log('Dispatching fullscreen event:', event.detail);
+      window.dispatchEvent(event);
+    }
+  };
+
+  // Add mouse wheel / touchpad zoom support (Ctrl+Scroll and pinch)
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Check for pinch gesture (ctrlKey is automatically set during pinch on most browsers)
+      // or explicit Ctrl+Scroll
+      if (e.ctrlKey) {
+        e.preventDefault();
+
+        // Determine zoom direction and amount based on wheel delta
+        const delta = e.deltaY;
+        const zoomSpeed = 5;
+
+        if (delta < 0) {
+          // Pinch out / Scroll up - zoom in
+          setScale((prev) => Math.min(prev + zoomSpeed, 200));
+        } else {
+          // Pinch in / Scroll down - zoom out
+          setScale((prev) => Math.max(prev - zoomSpeed, 50));
+        }
+      }
+    };
+
+    // Also handle touch gestures for mobile
+    let initialDistance = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+
+        const delta = currentDistance - initialDistance;
+        if (Math.abs(delta) > 10) {
+          if (delta > 0) {
+            // Pinch out - zoom in
+            setScale((prev) => Math.min(prev + 3, 200));
+          } else {
+            // Pinch in - zoom out
+            setScale((prev) => Math.max(prev - 3, 50));
+          }
+          initialDistance = currentDistance;
+        }
+      }
+    };
+
+    const pdfContainer = pdfContainerRef.current;
+    if (pdfContainer) {
+      pdfContainer.addEventListener('wheel', handleWheel, { passive: false });
+      pdfContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      pdfContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+    }
+
+    return () => {
+      if (pdfContainer) {
+        pdfContainer.removeEventListener('wheel', handleWheel);
+        pdfContainer.removeEventListener('touchstart', handleTouchStart);
+        pdfContainer.removeEventListener('touchmove', handleTouchMove);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -245,32 +405,130 @@ export default function ProtectedPDFViewer({
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-[100]' : 'relative w-full h-full'} bg-white flex flex-col`}>
-      {/* DevTools Warning */}
-      {devToolsOpen && (
-        <div className="fixed inset-0 z-[100] bg-white bg-opacity-95 flex items-center justify-center">
-          <div className="text-center text-gray-900 p-8">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-3xl font-bold mb-4">Developer Tools Detected</h2>
-            <p className="text-xl mb-4">Please close developer tools.</p>
+      {/* Initial Warning Popup - Shows for 4 seconds */}
+      {showInitialWarning && pdfReady && (
+        <div className="fixed inset-0 z-[200] bg-black bg-opacity-95 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full animate-fade-in">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h2 className="text-3xl font-bold text-red-600 mb-4">{t.pdfViewer.initialWarning.title}</h2>
+            </div>
+
+            <div className="space-y-4 text-left mb-6">
+              <p className="text-lg font-semibold text-gray-800">
+                🚫 {t.pdfViewer.initialWarning.subtitle}
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-gray-700 pl-4">
+                {t.pdfViewer.initialWarning.rules.map((rule, index) => (
+                  <li key={index} className="text-base">{rule}</li>
+                ))}
+              </ul>
+
+              <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mt-4">
+                <p className="text-red-800 font-bold text-center text-lg">
+                  ⚠️ {t.pdfViewer.initialWarning.banWarning}
+                  <br />
+                  <span className="text-base">{t.pdfViewer.initialWarning.noRefund}</span>
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowInitialWarning(false)}
+              className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors shadow-lg"
+            >
+              {t.pdfViewer.initialWarning.proceed}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Screenshot Block */}
+      {/* DevTools Warning - Non-blocking Toast */}
+      {devToolsOpen && (
+        <div className="fixed top-20 right-4 z-[100] bg-red-600 text-white rounded-lg shadow-2xl p-4 max-w-sm animate-slide-in">
+          <div className="flex items-start space-x-3">
+            <div className="text-2xl">⚠️</div>
+            <div className="flex-1">
+              <h3 className="font-bold mb-1">{t.pdfViewer.devTools.title}</h3>
+              <p className="text-xs opacity-90">{t.pdfViewer.devTools.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning Popup - Generic */}
+      {showWarningPopup && (
+        <div className="fixed top-20 right-4 z-[100] bg-red-600 text-white rounded-lg shadow-2xl p-4 max-w-sm">
+          <div className="flex items-start space-x-3">
+            <div className="text-2xl">❌</div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">{warningMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Screenshot Violation Popup */}
+      {showViolationPopup && (
+        <div className="fixed inset-0 z-[95] bg-black bg-opacity-90 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+            <div className="flex justify-between items-start mb-4">
+              <div className="text-5xl">🚫</div>
+              {violationCount < 3 && (
+                <button
+                  onClick={() => setShowViolationPopup(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              )}
+            </div>
+            <h2 className="text-2xl font-bold text-red-600 mb-3">
+              {violationCount >= 3 ? t.pdfViewer.violation.finalTitle : t.pdfViewer.violation.title}
+            </h2>
+            <p className="text-gray-700 mb-3">
+              {t.pdfViewer.violation.detected}
+            </p>
+            <div className={`border rounded p-3 mb-3 ${violationCount >= 3 ? 'bg-red-100 border-red-400' : 'bg-red-50 border-red-200'}`}>
+              <p className="text-sm text-red-700 font-semibold">
+                {t.pdfViewer.violation.violationNumber.replace('{count}', violationCount.toString())}
+              </p>
+              <p className="text-xs text-red-600 mt-1">
+                {violationCount >= 3
+                  ? t.pdfViewer.violation.finalMessage
+                  : t.pdfViewer.violation.warningsLeft.replace('{count}', (3 - violationCount).toString())
+                }
+              </p>
+            </div>
+            {violationCount >= 3 && (
+              <div className="bg-black text-white p-4 rounded text-center font-bold">
+                {t.pdfViewer.violation.loggingOut}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-3">
+              {t.pdfViewer.violation.logged}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Screenshot Block Overlay */}
       {isBlurred && (
         <div className="fixed inset-0 z-[90] bg-black flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl mb-4">🚫</div>
-            <p className="text-xl font-semibold text-white">Screenshot Blocked</p>
+            <div className="text-6xl mb-4">🚫</div>
+            <p className="text-2xl font-semibold text-white">Content Hidden</p>
+            <p className="text-sm text-gray-300 mt-2">Protected content temporarily blocked</p>
           </div>
         </div>
       )}
 
-      {/* Floating Toolbar */}
-      <div className="absolute top-4 right-4 z-30 bg-primary text-white rounded-md shadow-lg flex items-center gap-1 px-2 py-1.5">
+      {/* Floating Toolbar - Fixed to bottom-right */}
+      <div className="fixed bottom-4 right-4 z-30 bg-primary text-white rounded-md shadow-lg flex items-center gap-1 px-2 py-1.5">
         <button
           onClick={() => router.push("/dashboard/resources")}
           className="p-1.5 hover:bg-white/20 rounded"
+          title="Back to Resources"
         >
           <FiArrowLeft className="w-5 h-5" />
         </button>
@@ -278,63 +536,74 @@ export default function ProtectedPDFViewer({
           onClick={handleZoomOut}
           disabled={scale <= 50}
           className="p-1.5 hover:bg-white/20 rounded disabled:opacity-50"
+          title="Zoom Out (Ctrl+Scroll or Pinch)"
         >
           <FiZoomOut className="w-5 h-5" />
         </button>
-        <span className="text-sm px-2 font-medium">{scale}%</span>
+        <span className="text-sm px-2 font-medium cursor-help" title="Use Ctrl+Scroll or pinch gesture to zoom">{scale}%</span>
         <button
           onClick={handleZoomIn}
           disabled={scale >= 200}
           className="p-1.5 hover:bg-white/20 rounded disabled:opacity-50"
+          title="Zoom In (Ctrl+Scroll or Pinch)"
         >
           <FiZoomIn className="w-5 h-5" />
         </button>
         <button
           onClick={toggleFullscreen}
           className="p-1.5 hover:bg-white/20 rounded"
+          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
         >
           {isFullscreen ? <FiMinimize className="w-5 h-5" /> : <FiMaximize className="w-5 h-5" />}
         </button>
       </div>
 
-      {/* PDF Container - ONLY PDF's own scrollbar */}
-      <div className="flex-1 flex items-center justify-center bg-gray-50 overflow-hidden">
-        <div
-          className="relative bg-white shadow-2xl"
-          style={{
-            width: '850px',
-            height: '100%',
-            transform: `scale(${scale / 100})`,
-            transformOrigin: 'center'
-          }}
-        >
-          {/* Watermarks */}
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-evenly z-10">
-            <div className="transform rotate-[-45deg] text-7xl font-bold text-primary opacity-[0.02]">CrackTET</div>
-            <div className="transform rotate-[-45deg] text-4xl font-semibold text-gray-800 opacity-[0.03]">{userName}</div>
-            <div className="transform rotate-[-45deg] text-7xl font-bold text-primary opacity-[0.02]">CrackTET</div>
-          </div>
+      {/* PDF Container - Fixed window, zoomed content */}
+      <div className="flex-1 relative bg-gray-50 overflow-auto">
+        <div className="h-full flex items-start justify-center p-0 md:p-4">
+          <div
+            ref={pdfContainerRef}
+            className="relative bg-white shadow-2xl h-full"
+            style={{
+              width: '100%',
+              maxWidth: '100%',
+              transform: `scale(${scale / 100})`,
+              transformOrigin: 'top center',
+              transition: 'transform 0.2s ease-out'
+            }}
+          >
+            {/* Multiple Watermarks - Grid Pattern */}
+            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute transform rotate-[-45deg] font-bold select-none"
+                  style={{
+                    left: `${(i % 4) * 25 + 5}%`,
+                    top: `${Math.floor(i / 4) * 18 + 5}%`,
+                    fontSize: i % 2 === 0 ? '3rem' : '1.5rem',
+                    color: i % 2 === 0 ? '#0d599c' : '#666',
+                    opacity: 0.03,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {i % 2 === 0 ? 'CrackTET' : userName}
+                </div>
+              ))}
+            </div>
 
-          {/* PDF iframe with its own scrollbar */}
-          {pdfBlobUrl && (
-            <iframe
-              src={`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=1`}
-              className="w-full h-full border-0"
-              title={resourceTitle}
-            />
-          )}
+            {/* PDF iframe with its own scrollbar */}
+            {pdfBlobUrl && (
+              <iframe
+                src={`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                className="w-full h-full border-0"
+                title={resourceTitle}
+              />
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Bottom Warning */}
-      {!isFullscreen && (
-        <div className="flex-shrink-0 bg-red-600 text-white text-xs py-1.5 px-4">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">⚠️ PROTECTED CONTENT</span>
-            <span className="opacity-75">Licensed to: {userName}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

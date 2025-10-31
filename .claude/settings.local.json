@@ -6,7 +6,8 @@
       "Bash(ssh -i \"C:\\Users\\HP\\Downloads\\mainkey.pem\" ubuntu@98.94.74.61 'sudo npm install -g pm2 && pm2 --version')",
       "Bash(ssh:*)",
       "Bash(cd:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

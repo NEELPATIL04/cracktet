@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify user session
@@ -17,7 +17,8 @@ export async function GET(
       );
     }
 
-    const resourceId = parseInt(params.id);
+    const { id } = await params;
+    const resourceId = parseInt(id);
     if (isNaN(resourceId)) {
       return NextResponse.json(
         { error: "Invalid resource ID" },

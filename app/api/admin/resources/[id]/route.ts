@@ -7,7 +7,7 @@ import path from "path";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ✅ Verify admin session (matches your login format)
@@ -19,7 +19,8 @@ export async function DELETE(
       );
     }
 
-    const resourceId = parseInt(params.id);
+    const { id } = await params;
+    const resourceId = parseInt(id);
     if (isNaN(resourceId)) {
       return NextResponse.json(
         { error: "Invalid resource ID" },

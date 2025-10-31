@@ -173,5 +173,61 @@
       "invalidCredentials": "Invalid admin ID or password"
     },
     "redirecting": "Login successful! Redirecting..."
+  },
+  "pdfViewer": {
+    "initialWarning": {
+      "title": "IMPORTANT WARNING",
+      "subtitle": "DO NOT attempt to:",
+      "rules": [
+        "Take screenshots of this content",
+        "Download or save this PDF",
+        "Copy any text or content",
+        "Share or distribute this material"
+      ],
+      "banWarning": "VIOLATION WILL RESULT IN IMMEDIATE ACCOUNT BAN",
+      "noRefund": "NO REFUND WILL BE PROVIDED",
+      "proceed": "I Understand - Proceed to View PDF"
+    },
+    "violation": {
+      "title": "Screenshot Violation!",
+      "finalTitle": "FINAL VIOLATION - ACCOUNT BANNED!",
+      "detected": "Screenshot attempt detected and blocked.",
+      "violationNumber": "Violation #{count} of 3",
+      "warningsLeft": "{count} warning(s) remaining before permanent ban",
+      "finalMessage": "Account will be logged out immediately. All access revoked.",
+      "loggingOut": "Logging out in 2 seconds...",
+      "logged": "This violation has been logged and reported to administrators."
+    },
+    "devTools": {
+      "title": "Developer Tools Detected",
+      "message": "This action has been logged"
+    },
+    "warnings": {
+      "rightClick": "Right-click is disabled on this content",
+      "actionDisabled": "This action is disabled for content protection",
+      "copyDisabled": "Copying is disabled on this content"
+    }
+  },
+  "adminNotifications": {
+    "title": "Security Violations",
+    "subtitle": "Monitor user violations and screenshot attempts",
+    "table": {
+      "id": "ID",
+      "user": "User",
+      "email": "Email",
+      "resource": "Resource",
+      "type": "Type",
+      "violationNumber": "Strike",
+      "timestamp": "Time",
+      "notified": "Notified"
+    },
+    "noViolations": "No violations reported",
+    "loading": "Loading violations...",
+    "markNotified": "Mark as Notified",
+    "filter": {
+      "all": "All Violations",
+      "unnotified": "Unnotified Only",
+      "critical": "Critical (3 Strikes)"
+    }
   }
 }

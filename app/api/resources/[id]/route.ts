@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify user session
@@ -28,7 +28,8 @@ export async function GET(
       console.error("Failed to parse session:", e);
     }
 
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
     // Fetch resource (must be active)
     const [resource] = await db

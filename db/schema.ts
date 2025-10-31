@@ -62,6 +62,18 @@ export const resources = pgTable("resources", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const violations = pgTable("violations", {
+  id: serial("id").primaryKey(),
+  type: varchar("type", { length: 100 }).notNull(),
+  userEmail: varchar("user_email", { length: 255 }).notNull(),
+  userName: varchar("user_name", { length: 255 }).notNull(),
+  resourceTitle: text("resource_title").notNull(),
+  violationNumber: serial("violation_number").notNull(),
+  timestamp: timestamp("timestamp").notNull(),
+  notified: boolean("notified").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Admin = typeof admins.$inferSelect;
@@ -72,3 +84,5 @@ export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type Resource = typeof resources.$inferSelect;
 export type NewResource = typeof resources.$inferInsert;
+export type Violation = typeof violations.$inferSelect;
+export type NewViolation = typeof violations.$inferInsert;

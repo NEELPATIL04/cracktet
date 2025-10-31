@@ -7,7 +7,7 @@ import path from "path";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify user session
@@ -21,7 +21,8 @@ export async function GET(
 
     console.log("✅ Stream: Session valid, streaming resource");
 
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     console.log("📄 Fetching resource ID:", id);
 
     // Fetch resource (must be active)

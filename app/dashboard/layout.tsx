@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { FiFile, FiLogOut, FiMenu, FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiFile, FiMenu, FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface User {
@@ -23,6 +23,8 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [navbarVisible, setNavbarVisible] = useState(true);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   // Check if we're on the PDF viewer page
   const isPDFViewerPage = pathname?.includes('/dashboard/resources/view/');
@@ -39,6 +41,22 @@ export default function DashboardLayout({
 
   useEffect(() => {
     checkAuth();
+  }, []);
+
+  // Listen for fullscreen changes from PDF viewer
+  useEffect(() => {
+    const handleFullscreenChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isFullscreen === 'boolean') {
+        const { isFullscreen } = customEvent.detail;
+        console.log('Fullscreen state changed:', isFullscreen);
+        setNavbarVisible(!isFullscreen);
+        setSidebarVisible(!isFullscreen);
+      }
+    };
+
+    window.addEventListener('fullscreenChange', handleFullscreenChange);
+    return () => window.removeEventListener('fullscreenChange', handleFullscreenChange);
   }, []);
 
   const checkAuth = async () => {
@@ -101,14 +119,17 @@ export default function DashboardLayout({
   }
 
   const isActive = (path: string) => pathname === path;
-  const sidebarWidth = sidebarCollapsed ? "w-16" : "w-52"; // Reduced from w-64 to w-52
+  const sidebarWidth = sidebarCollapsed ? "w-16" : "w-64"; // Expanded sidebar
+
+  console.log('Layout render - navbarVisible:', navbarVisible, 'sidebarVisible:', sidebarVisible, 'isPDFViewerPage:', isPDFViewerPage);
 
   return (
-    <div className="h-screen overflow-hidden bg-secondary-gray">
-      {/* Top Navbar - Hidden on PDF viewer */}
-      {!isPDFViewerPage && (
-        <nav className="fixed top-0 left-0 right-0 h-16 bg-primary text-white shadow-lg z-30 flex items-center justify-between px-6">
-          {/* Left side - Mobile menu button */}
+    <div className="fixed inset-0 overflow-hidden bg-secondary-gray">
+      {/* Top Navbar */}
+      {navbarVisible && (
+        <nav className="absolute top-0 left-0 right-0 h-16 bg-primary text-white shadow-lg z-30 flex items-center justify-between px-6">
+        {/* Left side - Logo/Title */}
+        <div className="flex items-center space-x-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="lg:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
@@ -119,34 +140,31 @@ export default function DashboardLayout({
               <FiMenu className="w-6 h-6" />
             )}
           </button>
+          <h1 className="text-xl font-bold">{getPageTitle()}</h1>
+        </div>
 
-          {/* Center - Dynamic Title */}
-          <div className="flex-1 text-center lg:text-left lg:pl-4">
-            <h1 className="text-xl font-bold">{getPageTitle()}</h1>
+        {/* Right side - User info */}
+        <div className="hidden md:flex items-center space-x-3">
+          <div className="text-right">
+            <p className="text-sm font-medium">{user?.name}</p>
+            <p className="text-xs text-white text-opacity-80">{user?.email}</p>
           </div>
-
-          {/* Right side - User info */}
-          <div className="hidden md:flex items-center space-x-3">
-            <div className="text-right">
-              <p className="text-sm font-medium">{user?.name}</p>
-              <p className="text-xs text-white text-opacity-80">{user?.email}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center font-bold">
-              {user?.name?.charAt(0) || "U"}
-            </div>
+          <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center font-bold">
+            {user?.name?.charAt(0) || "U"}
           </div>
+        </div>
         </nav>
       )}
 
-      {/* Sidebar - Hidden on PDF viewer */}
-      {!isPDFViewerPage && (
+      {/* Sidebar - Hidden on mobile for PDF viewer */}
+      {sidebarVisible && (
         <aside
-          className={`fixed top-0 left-0 h-full ${sidebarWidth} bg-white shadow-lg transform transition-all duration-300 z-50 flex flex-col ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          }`}
+          className={`absolute top-0 left-0 bottom-0 ${sidebarWidth} bg-white shadow-lg transform transition-all duration-300 z-[60] flex flex-col ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } ${isPDFViewerPage ? 'hidden lg:flex' : 'lg:translate-x-0'}`}
         >
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 relative">
           {!sidebarCollapsed ? (
             <>
               <h2 className="text-xl font-bold text-primary">My Dashboard</h2>
@@ -159,6 +177,19 @@ export default function DashboardLayout({
               </div>
             </div>
           )}
+
+          {/* Collapse Arrow - Top Right Corner */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="absolute top-2 right-2 p-1.5 hover:bg-gray-100 rounded-md transition-colors hidden lg:block"
+            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <FiChevronRight className="w-4 h-4 text-gray-600" />
+            ) : (
+              <FiChevronLeft className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
         </div>
 
         {/* Menu Items */}
@@ -167,7 +198,7 @@ export default function DashboardLayout({
             href="/dashboard/resources"
             onClick={() => setSidebarOpen(false)}
             className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg transition-colors ${
-              isActive("/dashboard/resources")
+              pathname?.includes('/dashboard/resources')
                 ? "bg-primary text-white"
                 : "hover:bg-gray-100 text-gray-700"
             }`}
@@ -177,46 +208,19 @@ export default function DashboardLayout({
             {!sidebarCollapsed && <span className="font-medium">Resources</span>}
           </Link>
         </nav>
-
-        {/* Collapse Button (Desktop only) */}
-        <div className="hidden lg:flex items-center justify-center p-2 border-t border-gray-200">
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {sidebarCollapsed ? (
-              <FiChevronRight className="w-5 h-5 text-gray-600" />
-            ) : (
-              <FiChevronLeft className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
-        </div>
-
-        {/* Logout Button at Bottom */}
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-center space-x-2'} px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200`}
-            title="Logout"
-          >
-            <FiLogOut className="w-5 h-5" />
-            {!sidebarCollapsed && <span className="font-medium">Logout</span>}
-          </button>
-        </div>
         </aside>
       )}
 
       {/* Overlay for mobile */}
-      {!isPDFViewerPage && sidebarOpen && (
+      {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="absolute inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Main Content - Full screen on PDF viewer */}
-      <main className={`fixed ${isPDFViewerPage ? 'inset-0' : `top-16 bottom-0 ${sidebarCollapsed ? 'left-16' : 'left-52'} right-0`} transition-all duration-300 overflow-hidden`}>
+      {/* Main Content */}
+      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${isPDFViewerPage ? 'left-0 lg:left-64' : (sidebarVisible ? (sidebarCollapsed ? 'left-16' : 'left-64') : 'left-0')} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
         <div className={`w-full h-full ${isPDFViewerPage ? '' : 'overflow-auto p-6'}`}>
           {children}
         </div>

@@ -3,7 +3,7 @@
 import { useState, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FiUsers, FiFile, FiSettings, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import { FiUsers, FiFile, FiSettings, FiLogOut, FiMenu, FiX, FiAlertTriangle } from "react-icons/fi";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const menuItems = [
     { href: "/admin", icon: FiUsers, label: "Users" },
     { href: "/admin/resources", icon: FiFile, label: "Resources" },
+    { href: "/admin/notifications", icon: FiAlertTriangle, label: "Violations" },
     { href: "/admin/settings", icon: FiSettings, label: "Settings" },
   ];
 
