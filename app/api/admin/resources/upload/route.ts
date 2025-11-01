@@ -29,10 +29,19 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
+    const pageCountStr = formData.get("pageCount") as string;
 
-    if (!file || !title) {
+    if (!file || !title || !pageCountStr) {
       return NextResponse.json(
-        { error: "File and title are required" },
+        { error: "File, title, and page count are required" },
+        { status: 400 }
+      );
+    }
+
+    const pageCount = parseInt(pageCountStr);
+    if (isNaN(pageCount) || pageCount <= 0) {
+      return NextResponse.json(
+        { error: "Page count must be a positive number" },
         { status: 400 }
       );
     }
@@ -75,6 +84,9 @@ export async function POST(request: NextRequest) {
     const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
 
     // Save to database with UUID
+    // For now, use admin ID 1 as default - you may want to get this from session
+    const adminId = adminData?.id || 1;
+    
     const [newResource] = await db
       .insert(resources)
       .values({
@@ -84,6 +96,8 @@ export async function POST(request: NextRequest) {
         fileName: originalName,
         fileUrl: `/uploads/${fileName}`,
         fileSize: `${fileSizeInMB} MB`,
+        pageCount,
+        uploadedBy: adminId,
         isActive: true,
       })
       .returning();

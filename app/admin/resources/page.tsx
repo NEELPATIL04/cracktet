@@ -11,6 +11,7 @@ interface Resource {
   description: string;
   fileName: string;
   fileSize: string;
+  pageCount: number;
   isActive: boolean;
   createdAt: string;
 }
@@ -24,6 +25,7 @@ export default function AdminResourcesPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    pageCount: "",
     file: null as File | null,
   });
   const [uploadSuccess, setUploadSuccess] = useState("");
@@ -62,8 +64,14 @@ export default function AdminResourcesPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.file || !formData.title) {
+    if (!formData.file || !formData.title || !formData.pageCount) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    const pageCountNum = parseInt(formData.pageCount);
+    if (isNaN(pageCountNum) || pageCountNum <= 0) {
+      setError("Please enter a valid page count");
       return;
     }
 
@@ -75,6 +83,7 @@ export default function AdminResourcesPage() {
     uploadFormData.append("file", formData.file);
     uploadFormData.append("title", formData.title);
     uploadFormData.append("description", formData.description);
+    uploadFormData.append("pageCount", formData.pageCount);
 
     try {
       const response = await fetch("/api/admin/resources/upload", {
@@ -84,7 +93,7 @@ export default function AdminResourcesPage() {
 
       if (response.ok) {
         setUploadSuccess("Resource uploaded successfully!");
-        setFormData({ title: "", description: "", file: null });
+        setFormData({ title: "", description: "", pageCount: "", file: null });
         fetchResources();
         setTimeout(() => {
           setShowUploadModal(false);
@@ -183,8 +192,8 @@ export default function AdminResourcesPage() {
             </div>
 
             {uploadSuccess && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-600">{uploadSuccess}</p>
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-600">{uploadSuccess}</p>
               </div>
             )}
 
@@ -219,6 +228,21 @@ export default function AdminResourcesPage() {
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
                   placeholder="Enter description (optional)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Page Count *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={formData.pageCount}
+                  onChange={(e) => setFormData({ ...formData, pageCount: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                  placeholder="Enter number of pages"
                 />
               </div>
 
@@ -324,6 +348,7 @@ export default function AdminResourcesPage() {
                   <th className="px-6 py-4 text-left text-sm font-semibold">Title</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">File Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Size</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Pages</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Uploaded At</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
@@ -347,11 +372,12 @@ export default function AdminResourcesPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.fileName}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.fileSize}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{resource.pageCount}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           resource.isActive
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-blue-100 text-blue-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
@@ -415,12 +441,16 @@ export default function AdminResourcesPage() {
                     <span className="text-gray-600">Size:</span>
                     <span className="text-gray-900 font-medium">{resource.fileSize}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pages:</span>
+                    <span className="text-gray-900 font-medium">{resource.pageCount}</span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Status:</span>
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         resource.isActive
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-blue-100 text-blue-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >

@@ -214,7 +214,7 @@ TET / TAIT परीक्षेसाठी अल्पकाळात भर�
   };
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-secondary-gray py-12">
+    <main className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#8CC63F] to-[#6FA030] py-12">
       {/* Welcome Popup */}
       {showWelcomePopup && (
         <motion.div

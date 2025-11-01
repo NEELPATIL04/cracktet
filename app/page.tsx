@@ -212,7 +212,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg hover:bg-secondary-gray transition-colors"
+                className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <FaCheckCircle className="text-primary text-xl sm:text-2xl flex-shrink-0 mt-1" />
                 <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{point}</p>
@@ -249,7 +249,7 @@ export default function Home() {
       </section>
 
       {/* What is CrackTET Section */}
-      <section className="py-12 sm:py-16 bg-secondary-gray">
+      <section className="py-12 sm:py-16 bg-gradient-to-br from-[#8CC63F] to-[#6FA030]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -258,10 +258,10 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
               {t.home.whatIsCrackTET.title}
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-3xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-white max-w-3xl mx-auto">
               {t.home.whatIsCrackTET.description}
             </p>
           </motion.div>
@@ -375,26 +375,25 @@ export default function Home() {
       </section>
 
       {/* About Us & Contact Us Section - Side by Side */}
-      <section className="py-12 sm:py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      <section className="bg-white">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             {/* About Us */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-[#8CC63F] to-[#6FA030] rounded-2xl p-6 md:p-8 shadow-xl"
+              className="bg-gray-200 p-8 md:p-12 shadow-xl min-h-[400px] flex flex-col justify-center"
             >
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
                 {t.aboutUs.title}
               </h2>
               <div className="text-center mb-4">
-                <p className="text-lg md:text-xl font-semibold text-white italic">
+                <p className="text-lg md:text-xl font-semibold text-gray-800 italic">
                   {t.aboutUs.tagline}
                 </p>
               </div>
-              <div className="space-y-4 text-white text-sm md:text-base leading-relaxed">
+              <div className="space-y-4 text-gray-700 text-sm md:text-base leading-relaxed">
                 <p>
                   {t.aboutUs.para1}
                 </p>
@@ -413,7 +412,7 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="bg-primary rounded-2xl p-6 md:p-8 shadow-xl"
+              className="bg-primary p-6 md:p-8 shadow-xl"
             >
               <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
                 {t.contactUs.title}
@@ -458,8 +457,42 @@ export default function Home() {
               </div>
             </motion.div>
           </div>
-        </div>
       </section>
+
+      {/* Footer with Trademark */}
+      {/* <footer className="bg-[#0B1F3B] text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-4">
+            <div className="text-sm md:text-base">
+              <p className="text-gray-400">
+                Made for <span className="font-semibold text-blue-400">Gram Gaurav</span> - Developed by{" "}
+                <a 
+                  href="https://webdrift.in" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 transition-colors underline"
+                >
+                  WebDrift.in
+                </a>
+                {" "}in collaboration with{" "}
+                <a 
+                  href="https://redcyberfox.in" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-red-400 hover:text-red-300 transition-colors underline"
+                >
+                  RedCyberFox.in
+                </a>
+              </p>
+            </div>
+            <div className="border-t border-gray-800 pt-4">
+              <p className="text-xs text-gray-500">
+                © {new Date().getFullYear()} CrackTET. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer> */}
     </main>
   );
 }

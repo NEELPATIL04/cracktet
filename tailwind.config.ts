@@ -16,11 +16,11 @@ const config: Config = {
         },
         secondary: {
           DEFAULT: "#00aff0", // Sub font/placeholder color (light blue)
-          gray: "#aace47", // Component background color (green)
+          gray: "#f8fafc", // Component background color (very light gray/white)
         },
         background: {
-          DEFAULT: "#aace47", // Main background color (green)
-          light: "#c5e06f", // Lighter green
+          DEFAULT: "#ffffff", // Main background color (white)
+          light: "#f1f5f9", // Light gray
         },
       },
     },

@@ -9,6 +9,7 @@ interface Resource {
   uuid: string;
   title: string;
   description: string;
+  pageCount: number;
 }
 
 interface UserData {
@@ -118,6 +119,7 @@ export default function ViewResourcePage() {
       userName={userData.name}
       userEmail={userData.email}
       userMobile={userData.mobile}
+      pageCount={resource.pageCount}
     />
   );
 }

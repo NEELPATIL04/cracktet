@@ -292,7 +292,7 @@ export default function AdminNotifications() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       {violation.notified ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           <FaCheckCircle className="mr-1" />
                           Notified
                         </span>
@@ -378,7 +378,7 @@ export default function AdminNotifications() {
                       {t.adminNotifications.table.notified}:
                     </span>
                     {violation.notified ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         <FaCheckCircle className="mr-1" />
                         Notified
                       </span>

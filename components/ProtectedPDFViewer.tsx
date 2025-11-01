@@ -11,6 +11,7 @@ interface ProtectedPDFViewerProps {
   userName: string;
   userEmail: string;
   userMobile: string;
+  pageCount: number;
 }
 
 export default function ProtectedPDFViewer({
@@ -19,6 +20,7 @@ export default function ProtectedPDFViewer({
   userName,
   userEmail,
   userMobile,
+  pageCount,
 }: ProtectedPDFViewerProps) {
 
   const router = useRouter();
@@ -39,7 +41,7 @@ export default function ProtectedPDFViewer({
   const [showInitialWarning, setShowInitialWarning] = useState(true);
   const [pdfReady, setPdfReady] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(0); // TODO: Implement total page detection
+  const [totalPages, setTotalPages] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [overlayBlack, setOverlayBlack] = useState(false);
   const [devToolsBlockedEntry, setDevToolsBlockedEntry] = useState(false);
@@ -136,6 +138,10 @@ export default function ProtectedPDFViewer({
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
 
+        // Use page count from database (now mandatory)
+        setTotalPages(pageCount);
+        console.log(`📄 PDF loaded with ${pageCount} pages from database`);
+
         setPdfBlobUrl(url);
         setPdfReady(true);
         setLoading(false);
@@ -155,9 +161,17 @@ export default function ProtectedPDFViewer({
     };
   }, [pdfUrl, devToolsBlockedEntry]);
 
-  // ✅ Auto-enter browser fullscreen when PDF is ready (more reliable)
+  // ✅ Auto-enter browser fullscreen when PDF is ready (desktop only)
   useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     const enterFullscreen = async () => {
+      // Skip auto-fullscreen on mobile devices
+      if (isMobile) {
+        console.log("📱 Mobile device detected - skipping auto-fullscreen");
+        return;
+      }
+      
       // Wait a small moment for DOM to be ready
       await new Promise(resolve => setTimeout(resolve, 100));
       
@@ -1340,7 +1354,13 @@ export default function ProtectedPDFViewer({
                     return false;
                   }}
                   onTouchStart={(e) => {
-                    // Block touch scrolling
+                    // Allow touch interactions on mobile for scrolling and navigation
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    if (isMobile) {
+                      // Allow touch events on mobile
+                      return;
+                    }
+                    // Block touch scrolling on desktop
                     e.preventDefault();
                     setWarningMessage("Use navigation buttons to change pages");
                     setShowWarningPopup(true);
@@ -1401,20 +1421,24 @@ export default function ProtectedPDFViewer({
                       type="number"
                       value={currentPage}
                       onChange={(e) => {
-                        const page = Math.max(1, parseInt(e.target.value) || 1);
+                        const page = Math.max(1, Math.min(totalPages || 999, parseInt(e.target.value) || 1));
                         setCurrentPage(page);
                       }}
                       className="w-10 md:w-12 px-1 md:px-2 py-0.5 md:py-1 border border-gray-300 rounded text-center text-xs md:text-sm"
                       min="1"
+                      max={totalPages || 999}
                     />
                     <span className="text-xs md:text-sm">/ {totalPages || '?'}</span>
                   </div>
 
                   <button
                     onClick={() => {
-                      setCurrentPage(currentPage + 1);
+                      if (totalPages === 0 || currentPage < totalPages) {
+                        setCurrentPage(currentPage + 1);
+                      }
                     }}
-                    className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-all"
+                    disabled={totalPages > 0 && currentPage >= totalPages}
+                    className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     title="Next Page"
                   >
                     <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -66,6 +66,7 @@ export async function GET(
         uuid: resource.uuid,
         title: resource.title,
         description: resource.description,
+        pageCount: resource.pageCount,
       },
       user: user, // Include complete user data from database
     });

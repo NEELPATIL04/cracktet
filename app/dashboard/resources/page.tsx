@@ -166,7 +166,7 @@ export default function ResourcesPage() {
               >
                 <div className="p-4 md:p-6">
                   <div className="flex items-start justify-between mb-3 md:mb-4">
-                    <div className="p-2 md:p-3 bg-secondary-gray rounded-lg group-hover:scale-110 transition-transform">
+                    <div className="p-2 md:p-3 bg-gray-100 rounded-lg group-hover:scale-110 transition-transform">
                       <FiFile className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                     </div>
                     <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">

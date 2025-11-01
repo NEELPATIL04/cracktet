@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, decimal, boolean, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, timestamp, decimal, boolean, text, integer } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -57,6 +57,7 @@ export const resources = pgTable("resources", {
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileUrl: text("file_url").notNull(),
   fileSize: varchar("file_size", { length: 50 }),
+  pageCount: integer("page_count").notNull(),
   uploadedBy: serial("uploaded_by").references(() => admins.id).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -106,7 +106,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-gray">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -139,7 +139,7 @@ export default function DashboardLayout({
   console.log('Layout render - navbarVisible:', navbarVisible, 'sidebarVisible:', sidebarVisible, 'isPDFViewerPage:', isPDFViewerPage);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-secondary-gray">
+    <div className="fixed inset-0 overflow-hidden bg-gray-50">
       {/* Top Navbar */}
       {navbarVisible && (
         <nav className="absolute top-0 left-0 right-0 h-16 bg-primary text-white shadow-lg z-30 flex items-center justify-between px-6">

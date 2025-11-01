@@ -134,7 +134,7 @@ export default function Navbar() {
               <>
                 <Link href="/login" className="relative overflow-hidden">
                   <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
-                    Login
+                    {t.navbar.login}
                     <motion.span
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                       animate={{
@@ -182,17 +182,33 @@ export default function Navbar() {
 
             {isLoggedIn && (
               <>
-                <Link
-                  href="/dashboard/resources"
-                  className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Resources
+                <Link href="/dashboard/resources" className="relative overflow-hidden">
+                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                    {t.navbar.resources}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >
-                  Logout
+                  {t.navbar.logout}
                 </button>
               </>
             )}
@@ -245,7 +261,7 @@ export default function Navbar() {
               <>
                 <Link href="/login" className="relative overflow-hidden">
                   <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
-                    Login
+                    {t.navbar.login}
                     <motion.span
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                       animate={{
@@ -293,17 +309,33 @@ export default function Navbar() {
 
             {isLoggedIn && (
               <>
-                <Link
-                  href="/dashboard/resources"
-                  className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Resources
+                <Link href="/dashboard/resources" className="relative overflow-hidden">
+                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                    {t.navbar.resources}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >
-                  Logout
+                  {t.navbar.logout}
                 </button>
               </>
             )}
