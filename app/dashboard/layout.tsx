@@ -134,7 +134,6 @@ export default function DashboardLayout({
     );
   }
 
-  const isActive = (path: string) => pathname === path;
   const sidebarWidth = sidebarCollapsed ? "w-16" : "w-64"; // Expanded sidebar
 
   console.log('Layout render - navbarVisible:', navbarVisible, 'sidebarVisible:', sidebarVisible, 'isPDFViewerPage:', isPDFViewerPage);
@@ -243,7 +242,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content */}
-      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${!sidebarVisible ? 'left-0' : (isPDFViewerPage ? 'left-0 lg:left-64' : (sidebarCollapsed ? 'left-16' : 'left-64'))} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
+      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${!sidebarVisible ? 'left-0' : (isPDFViewerPage ? 'left-0 lg:left-64' : 'left-0 lg:left-64')} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
         <div className={`w-full h-full ${isPDFViewerPage ? '' : 'overflow-auto p-6'}`}>
           {children}
         </div>

@@ -259,7 +259,7 @@ export default function Home() {
             className="text-center mb-8 sm:mb-12"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              What is CrackTET?
+              {t.home.whatIsCrackTET.title}
             </h2>
             <p className="text-sm sm:text-base md:text-lg text-gray-700 max-w-3xl mx-auto">
               {t.home.whatIsCrackTET.description}
@@ -298,7 +298,7 @@ export default function Home() {
             className="text-center mb-8 sm:mb-12"
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose CrackTET?
+              {t.home.whyChoose.title}
             </h2>
           </motion.div>
 
