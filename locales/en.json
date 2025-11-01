@@ -3,6 +3,8 @@
     "home": "Home",
     "register": "Register",
     "login": "Login",
+    "logout": "Logout",
+    "resources": "Resources",
     "admin": "Admin",
     "language": "Language"
   },
@@ -64,6 +66,14 @@
         {
           "title": "Free Resources",
           "description": "Access to quality study materials and mock tests at no cost"
+        },
+        {
+          "title": "24/7 Online Access",
+          "description": "Access your study materials and tests anytime, anywhere - at your convenience"
+        },
+        {
+          "title": "Instant Results & Feedback",
+          "description": "Get detailed scores and improvement suggestions immediately after completing tests"
         }
       ]
     }
@@ -142,6 +152,21 @@
       "confirmPasswordRequired": "Please confirm your password",
       "passwordMismatch": "Passwords do not match"
     }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to access your resources",
+    "form": {
+      "identifier": "Email or Phone Number",
+      "identifierPlaceholder": "Enter your email or phone",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "signingIn": "Signing in..."
+    },
+    "noAccount": "Don't have an account?",
+    "registerHere": "Register here",
+    "backToHome": "← Back to Home"
   },
   "admin": {
     "title": "Registered Users",
