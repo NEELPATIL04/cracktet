@@ -16,16 +16,42 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Detect user's operating system
+  const detectOS = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const platform = navigator.platform.toLowerCase();
+    
+    if (userAgent.includes('android')) {
+      return 'Android';
+    } else if (/iphone|ipad|ipod/.test(userAgent)) {
+      return 'iOS';
+    } else if (platform.includes('win')) {
+      return 'Windows';
+    } else if (platform.includes('mac')) {
+      return 'macOS';
+    } else if (platform.includes('linux')) {
+      return 'Linux';
+    } else {
+      return 'Unknown';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+      const userOS = detectOS();
       const response = await fetch("/api/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          userOS,
+          userAgent: navigator.userAgent,
+          platform: navigator.platform
+        }),
       });
 
       const data = await response.json();
