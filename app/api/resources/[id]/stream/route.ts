@@ -60,11 +60,11 @@ export async function GET(
         "Expires": "0",
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Error streaming resource:", error);
-    console.error("❌ Error stack:", error.stack);
+    console.error("❌ Error stack:", error instanceof Error ? error.stack : 'Unknown error');
     return NextResponse.json(
-      { error: `Failed to stream resource: ${error.message}` },
+      { error: `Failed to stream resource: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }

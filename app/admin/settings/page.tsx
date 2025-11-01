@@ -158,7 +158,7 @@ export default function AdminSettingsPage() {
                 </h4>
                 <ul className="text-sm text-yellow-700 space-y-1">
                   <li>• Fee changes will affect new registrations only</li>
-                  <li>• Existing users' payments will not be affected</li>
+                  <li>• Existing users&apos; payments will not be affected</li>
                   <li>• Users added directly by admin bypass this fee</li>
                 </ul>
               </div>

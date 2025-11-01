@@ -164,12 +164,12 @@ export default function ProtectedPDFViewer({
       try {
         if (document.documentElement.requestFullscreen) {
           await document.documentElement.requestFullscreen();
-        } else if ((document.documentElement as any).webkitRequestFullscreen) {
-          await (document.documentElement as any).webkitRequestFullscreen();
-        } else if ((document.documentElement as any).msRequestFullscreen) {
-          await (document.documentElement as any).msRequestFullscreen();
+        } else if ((document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
+          await (document.documentElement as HTMLElement & { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen();
+        } else if ((document.documentElement as HTMLElement & { msRequestFullscreen?: () => Promise<void> }).msRequestFullscreen) {
+          await (document.documentElement as HTMLElement & { msRequestFullscreen: () => Promise<void> }).msRequestFullscreen();
         }
-      } catch (error) {
+      } catch {
         // Show user a manual fullscreen button if auto-fullscreen fails
         setWarningMessage("Click the fullscreen button to enter fullscreen mode");
         setShowWarningPopup(true);
@@ -245,8 +245,8 @@ export default function ProtectedPDFViewer({
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).msFullscreenElement
+        (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement ||
+        (document as Document & { msFullscreenElement?: Element }).msFullscreenElement
       );
       setIsFullscreen(isCurrentlyFullscreen);
       
@@ -771,10 +771,10 @@ export default function ProtectedPDFViewer({
         // Exit fullscreen when ESC is pressed
         if (document.exitFullscreen) {
           document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          (document as any).webkitExitFullscreen();
-        } else if ((document as any).msExitFullscreen) {
-          (document as any).msExitFullscreen();
+        } else if ((document as Document & { webkitExitFullscreen?: () => void }).webkitExitFullscreen) {
+          (document as Document & { webkitExitFullscreen: () => void }).webkitExitFullscreen();
+        } else if ((document as Document & { msExitFullscreen?: () => void }).msExitFullscreen) {
+          (document as Document & { msExitFullscreen: () => void }).msExitFullscreen();
         }
         return;
       }
@@ -1062,16 +1062,16 @@ export default function ProtectedPDFViewer({
               try {
                 if (document.exitFullscreen) {
                   await document.exitFullscreen();
-                } else if ((document as any).webkitExitFullscreen) {
-                  await (document as any).webkitExitFullscreen();
-                } else if ((document as any).msExitFullscreen) {
-                  await (document as any).msExitFullscreen();
+                } else if ((document as Document & { webkitExitFullscreen?: () => Promise<void> }).webkitExitFullscreen) {
+                  await (document as Document & { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen();
+                } else if ((document as Document & { msExitFullscreen?: () => Promise<void> }).msExitFullscreen) {
+                  await (document as Document & { msExitFullscreen: () => Promise<void> }).msExitFullscreen();
                 }
                 // Wait a moment for fullscreen to exit before navigating
                 setTimeout(() => {
                   router.push("/dashboard/resources");
                 }, 100);
-              } catch (error) {
+              } catch {
                 // Navigate anyway if fullscreen exit fails
                 router.push("/dashboard/resources");
               }
@@ -1314,13 +1314,6 @@ export default function ProtectedPDFViewer({
                       return false;
                     }
                   }}
-                  {...{
-                    onSelectStart: (e: Event) => {
-                      // Block text selection
-                      e.preventDefault();
-                      return false;
-                    }
-                  } as any}
                   onDragStart={(e) => {
                     // Block drag operations
                     e.preventDefault();
