@@ -8,6 +8,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+type Language = "en" | "hi" | "mr";
+
 export default function Navbar() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -237,7 +239,7 @@ export default function Navbar() {
                       <button
                         key={lang.code}
                         onClick={() => {
-                          setLanguage(lang.code);
+                          setLanguage(lang.code as Language);
                           setShowLanguageMenu(false);
                         }}
                         className={`block w-full text-left px-4 py-3 text-sm transition-colors ${
@@ -387,7 +389,7 @@ export default function Navbar() {
                       <button
                         key={lang.code}
                         onClick={() => {
-                          setLanguage(lang.code);
+                          setLanguage(lang.code as Language);
                         }}
                         className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                           language === lang.code

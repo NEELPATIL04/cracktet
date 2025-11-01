@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 
@@ -22,6 +22,7 @@ export default function CustomMobilePDFViewer({
   pageCount,
 }: CustomMobilePDFViewerProps) {
   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
 
   console.log("📱 CustomMobilePDFViewer: Rendering custom viewer", { resourceTitle });
 
@@ -98,11 +99,10 @@ export default function CustomMobilePDFViewer({
         WebkitUserSelect: 'none',
         userSelect: 'none',
         WebkitTouchCallout: 'none',
-        WebkitUserDrag: 'none',
         KhtmlUserSelect: 'none',
         MozUserSelect: 'none',
         msUserSelect: 'none'
-      }}
+      } as React.CSSProperties}
     >
       {/* Header with Back Button and Title */}
       <div className="absolute top-0 left-0 right-0 z-50 bg-gray-800 p-4 shadow-lg">

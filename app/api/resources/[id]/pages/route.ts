@@ -5,8 +5,6 @@ import { eq, and } from "drizzle-orm";
 import { readFile } from "fs/promises";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
-import sharp from "sharp";
-import { createCanvas, loadImage } from "canvas";
 
 // Convert PDF pages to images with watermarks
 async function convertPDFPagesToImages(pdfBuffer: Buffer, userInfo: { name: string; email: string; mobile: string }) {
