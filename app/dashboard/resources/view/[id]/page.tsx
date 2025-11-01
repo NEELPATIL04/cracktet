@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 import ProtectedPDFViewer from "@/components/ProtectedPDFViewer";
 import MobilePDFViewer from "@/components/MobilePDFViewer";
+import CustomMobilePDFViewer from "@/components/CustomMobilePDFViewer";
 import { useUser } from "@/contexts/UserContext";
 
 interface Resource {
