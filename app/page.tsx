@@ -31,26 +31,36 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    // Hide initial logo after 2 seconds and show content
+    // Hide initial logo after 3.5 seconds and show content (increased from 2s)
     const logoTimer = setTimeout(() => {
       setShowLogo(false);
       setShowContent(true);
       setShowHeroSlideshow(true);
-    }, 2000);
+    }, 3500);
 
     return () => clearTimeout(logoTimer);
   }, []);
 
   useEffect(() => {
-    // Text and Logo slideshow in hero section
+    // Text and Logo slideshow in hero section with different timing
     if (showHeroSlideshow) {
       const slideInterval = setInterval(() => {
-        setCurrentSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
-      }, 3000); // Change slide every 3 seconds
+        setCurrentSlideIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % slides.length;
+          // If moving to logo patch (index 1), use longer duration
+          // If moving to text (index 0), use shorter duration
+          const duration = nextIndex === 1 ? 5000 : 3000;
+          clearInterval(slideInterval);
+          setTimeout(() => {
+            setCurrentSlideIndex(nextIndex);
+          }, 0);
+          return prevIndex;
+        });
+      }, currentSlideIndex === 1 ? 5000 : 3000); // Logo shows for 5s, text for 3s
 
       return () => clearInterval(slideInterval);
     }
-  }, [showHeroSlideshow, slides.length]);
+  }, [showHeroSlideshow, slides.length, currentSlideIndex]);
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden">
@@ -135,18 +145,18 @@ export default function Home() {
                         {/* Vertical Separator */}
                         <div className="h-24 sm:h-32 md:h-40 lg:h-48 w-1 sm:w-1.5 bg-white self-center shadow-lg"></div>
 
-                        {/* Rectangular Logo */}
+                        {/* Rectangular Logo with White Background */}
                         <motion.div
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.3 }}
                           className="flex items-center justify-center relative self-center"
                         >
-                          <div className="relative h-24 w-[200px] sm:h-32 sm:w-[240px] md:h-40 md:w-[320px] lg:h-48 lg:w-[400px]">
+                          <div className="relative h-24 w-[200px] sm:h-32 sm:w-[240px] md:h-40 md:w-[320px] lg:h-48 lg:w-[400px] bg-white rounded-2xl shadow-2xl p-2 sm:p-3 md:p-4">
                             <Image
-                              src="/images/cracktet-logo.png"
+                              src="/images/cracktet-white.jpeg"
                               alt="CrackTET"
                               fill
-                              className="object-contain drop-shadow-2xl"
+                              className="object-contain"
                               priority
                               quality={100}
                             />
@@ -337,7 +347,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-white"
           >
-            Ready to Start Your TET Journey?
+            {t.cta.title}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -346,7 +356,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-white"
           >
-            Join thousands of aspiring teachers preparing for Maharashtra TET
+            {t.cta.subtitle}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -358,9 +368,96 @@ export default function Home() {
               href="/register"
               className="inline-block bg-white text-primary px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors shadow-lg"
             >
-              Register Now
+              {t.cta.button}
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* About Us & Contact Us Section - Side by Side */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* About Us */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="bg-gradient-to-br from-[#8CC63F] to-[#6FA030] rounded-2xl p-6 md:p-8 shadow-xl"
+            >
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+                {t.aboutUs.title}
+              </h2>
+              <div className="text-center mb-4">
+                <p className="text-lg md:text-xl font-semibold text-white italic">
+                  {t.aboutUs.tagline}
+                </p>
+              </div>
+              <div className="space-y-4 text-white text-sm md:text-base leading-relaxed">
+                <p>
+                  {t.aboutUs.para1}
+                </p>
+                <p>
+                  {t.aboutUs.para2}
+                </p>
+                <p className="font-semibold">
+                  {t.aboutUs.para3}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Contact Us */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="bg-primary rounded-2xl p-6 md:p-8 shadow-xl"
+            >
+              <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+                {t.contactUs.title}
+              </h2>
+              <div className="space-y-6 text-white">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-sm md:text-base">{t.contactUs.email}</p>
+                    <a href="mailto:cracktet2025@gmail.com" className="text-sm md:text-base hover:underline">
+                      cracktet2025@gmail.com
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-sm md:text-base">{t.contactUs.whatsapp}</p>
+                    <a href="https://wa.me/919226622570" className="text-sm md:text-base hover:underline" target="_blank" rel="noopener noreferrer">
+                      92266 22570
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-sm md:text-base">{t.contactUs.call}</p>
+                    <a href="tel:+918446447102" className="text-sm md:text-base hover:underline">
+                      84464 47102
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
     </main>

@@ -250,9 +250,9 @@ export default function ProtectedPDFViewer({
       );
       setIsFullscreen(isCurrentlyFullscreen);
       
-      // If user exits fullscreen, exit the PDF and go back
+      // If user exits fullscreen, exit the PDF and reload the page
       if (!isCurrentlyFullscreen) {
-        router.push("/dashboard/resources");
+        window.location.href = "/dashboard/resources";
         return;
       }
       
@@ -1080,11 +1080,11 @@ export default function ProtectedPDFViewer({
               router.push("/dashboard/resources");
             }
           }}
-          className="flex items-center space-x-2 bg-white hover:bg-gray-50 text-gray-800 px-4 py-3 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
+          className="flex items-center space-x-1 md:space-x-2 bg-white hover:bg-gray-50 text-gray-800 px-2 md:px-4 py-2 md:py-3 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:shadow-xl"
           title="Back to Resources"
         >
-          <FiArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Resources</span>
+          <FiArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="text-xs md:text-base font-medium">Back</span>
         </button>
       </div>
       {/* Initial Warning Popup - Shows for 4 seconds */}
@@ -1205,24 +1205,24 @@ export default function ProtectedPDFViewer({
         </div>
       )}
 
-      {/* Floating Toolbar - Fixed to bottom-right (Zoom controls only) */}
-      <div className="fixed bottom-4 right-4 bg-primary text-white rounded-md shadow-lg flex items-center gap-1 px-2 py-1.5" style={{ zIndex: 99999999 }}>
+      {/* Floating Toolbar - Fixed to top-right (Zoom controls only) */}
+      <div className="fixed top-4 right-4 bg-primary text-white rounded-md shadow-lg flex items-center gap-1 px-2 py-1.5" style={{ zIndex: 99999999 }}>
         <button
           onClick={handleZoomOut}
           disabled={scale <= 50}
-          className="p-1.5 hover:bg-white/20 rounded disabled:opacity-50"
-          title="Zoom Out (Ctrl+Scroll or Pinch)"
+          className="p-1 md:p-1.5 hover:bg-white/20 rounded disabled:opacity-50"
+          title="Zoom Out"
         >
-          <FiZoomOut className="w-5 h-5" />
+          <FiZoomOut className="w-4 h-4 md:w-5 md:h-5" />
         </button>
-        <span className="text-sm px-2 font-medium cursor-help" title="Use Ctrl+Scroll or pinch gesture to zoom">{scale}%</span>
+        <span className="text-xs md:text-sm px-1 md:px-2 font-medium">{scale}%</span>
         <button
           onClick={handleZoomIn}
           disabled={scale >= 200}
-          className="p-1.5 hover:bg-white/20 rounded disabled:opacity-50"
-          title="Zoom In (Ctrl+Scroll or Pinch)"
+          className="p-1 md:p-1.5 hover:bg-white/20 rounded disabled:opacity-50"
+          title="Zoom In"
         >
-          <FiZoomIn className="w-5 h-5" />
+          <FiZoomIn className="w-4 h-4 md:w-5 md:h-5" />
         </button>
       </div>
 
@@ -1379,7 +1379,7 @@ export default function ProtectedPDFViewer({
                 </div>
                 
                 {/* Navigation Buttons */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200" style={{ zIndex: 99999999 }}>
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 md:gap-4 bg-white rounded-lg shadow-lg px-2 md:px-4 py-1.5 md:py-2 border border-gray-200" style={{ zIndex: 99999999 }}>
                   <button
                     onClick={() => {
                       if (currentPage > 1) {
@@ -1387,16 +1387,16 @@ export default function ProtectedPDFViewer({
                       }
                     }}
                     disabled={currentPage <= 1}
-                    className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     title="Previous Page"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <span>Page</span>
+
+                  <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-medium">
+                    <span className="hidden md:inline">Page</span>
                     <input
                       type="number"
                       value={currentPage}
@@ -1404,20 +1404,20 @@ export default function ProtectedPDFViewer({
                         const page = Math.max(1, parseInt(e.target.value) || 1);
                         setCurrentPage(page);
                       }}
-                      className="w-12 px-2 py-1 border border-gray-300 rounded text-center"
+                      className="w-10 md:w-12 px-1 md:px-2 py-0.5 md:py-1 border border-gray-300 rounded text-center text-xs md:text-sm"
                       min="1"
                     />
-                    <span>of {totalPages || '?'}</span>
+                    <span className="text-xs md:text-sm">/ {totalPages || '?'}</span>
                   </div>
-                  
+
                   <button
                     onClick={() => {
                       setCurrentPage(currentPage + 1);
                     }}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-all"
+                    className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-all"
                     title="Next Page"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Navbar from "@/components/Navbar";
@@ -6,6 +6,13 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "CrackTET - Maharashtra Teacher Eligibility Test Preparation",
   description: "Your complete guide to Maharashtra TET success. Access mock tests, study materials, and expert guidance.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

@@ -221,27 +221,30 @@ TET / TAIT परीक्षेसाठी अल्पकाळात भर�
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 md:p-4"
+          onClick={() => setShowWelcomePopup(false)}
         >
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header with language toggle */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#8CC63F] to-[#6FA030]">
-              <h2 className="text-2xl font-bold text-white">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-[#8CC63F] to-[#6FA030] flex-shrink-0">
+              <h2 className="text-lg md:text-2xl font-bold text-white">
                 {welcomeContent[popupLanguage].title}
               </h2>
-              <div className="flex items-center space-x-4">
-                <div className="flex bg-white/20 rounded-lg p-1">
+              <div className="flex items-center space-x-2 md:space-x-4">
+                <div className="flex bg-white/20 rounded-lg p-0.5 md:p-1">
                   <button
                     onClick={() => setPopupLanguage('en')}
-                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-2 md:px-3 py-1 rounded-md text-xs md:text-sm font-medium transition-all ${
                       popupLanguage === 'en'
-                        ? 'bg-white text-[#8CC63F]'
+                        ? 'bg-white text-[#8CC63F] shadow-md'
                         : 'text-white hover:bg-white/10'
                     }`}
                   >
@@ -249,9 +252,9 @@ TET / TAIT परीक्षेसाठी अल्पकाळात भर�
                   </button>
                   <button
                     onClick={() => setPopupLanguage('mr')}
-                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-2 md:px-3 py-1 rounded-md text-xs md:text-sm font-medium transition-all ${
                       popupLanguage === 'mr'
-                        ? 'bg-white text-[#8CC63F]'
+                        ? 'bg-white text-[#8CC63F] shadow-md'
                         : 'text-white hover:bg-white/10'
                     }`}
                   >
@@ -260,31 +263,43 @@ TET / TAIT परीक्षेसाठी अल्पकाळात भर�
                 </div>
                 <button
                   onClick={() => setShowWelcomePopup(false)}
-                  className="text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+                  className="text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition-all hover:rotate-90 duration-300"
                 >
-                  ✕
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <div className="prose prose-lg max-w-none">
-                <pre className="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans text-base">
+            <div className="p-4 md:p-6 overflow-y-auto flex-1">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="prose prose-sm md:prose-lg max-w-none"
+              >
+                <pre className="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans text-sm md:text-base">
                   {welcomeContent[popupLanguage].content}
                 </pre>
-              </div>
+              </motion.div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-center p-6 border-t border-gray-200 bg-gray-50">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+              className="flex items-center justify-center p-4 md:p-6 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white flex-shrink-0"
+            >
               <button
                 onClick={() => setShowWelcomePopup(false)}
-                className="bg-gradient-to-r from-[#8CC63F] to-[#6FA030] text-white px-8 py-3 rounded-lg font-semibold text-lg hover:from-[#6FA030] hover:to-[#5A8A26] transition-all shadow-lg hover:shadow-xl"
+                className="w-full md:w-auto bg-gradient-to-r from-[#8CC63F] to-[#6FA030] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-base md:text-lg hover:from-[#6FA030] hover:to-[#5A8A26] transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
               >
-                {popupLanguage === 'en' ? 'Continue to Registration' : 'नोंदणी सुरू करा'}
+                {popupLanguage === 'en' ? 'Continue to Registration →' : 'नोंदणी सुरू करा →'}
               </button>
-            </div>
+            </motion.div>
           </motion.div>
         </motion.div>
       )}
