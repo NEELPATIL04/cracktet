@@ -41,12 +41,13 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [registeredUserId, setRegisteredUserId] = useState<number | null>(null);
   const [registrationFee, setRegistrationFee] = useState(2500);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [popupLanguage, setPopupLanguage] = useState<'en' | 'mr'>('en');
 
   useEffect(() => {
     // Fetch registration fee from settings
-    fetch('/api/admin/settings')
+    fetch('/api/settings')
       .then(res => res.json())
       .then(data => {
         if (data.registrationFee) {
@@ -118,40 +119,178 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/register", {
+      // Check if email or mobile already exists before proceeding to payment
+      const checkResponse = await fetch("/api/check-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          mobile: formData.mobile,
+        }),
       });
 
-      const data = await response.json();
+      const checkData = await checkResponse.json();
 
-      if (!response.ok) {
-        if (data.error === "Email already registered") {
+      if (!checkResponse.ok) {
+        if (checkData.field === "email") {
           setErrors({ email: t.register.errors.emailExists });
-        } else if (data.error === "Mobile number already registered") {
+        } else if (checkData.field === "mobile") {
           setErrors({ mobile: t.register.errors.mobileExists });
         } else {
-          setErrors({ general: data.error || "Registration failed" });
+          setErrors({ general: checkData.error || "Validation failed" });
         }
         return;
       }
 
-      // Store user ID and show payment modal
-      setRegisteredUserId(data.user.id);
+      // Proceed to payment modal without creating user
       setShowPaymentModal(true);
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Validation error:", error);
       setErrors({ general: "An error occurred. Please try again." });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const welcomeContent = {
+    en: {
+      title: "For All TET Aspirants",
+      points: [
+        "As you stand on the very threshold of becoming a teacher We, on behalf of our institution, are conducting this special initiative to help you achieve complete success in the TET / TAIT examination.",
+        "CRACKTET is a simple, easy-to-understand, and affordable coaching program designed especially for all aspirants.",
+        ">> While preparing for the examination, you will be guided through everything you need to know about the TET / TAIT exams.",
+        ">> Our key objective is to help you overcome exam-related fear and approach the test with complete confidence and composure.",
+        "What will you get through our coaching ?",
+        "■ In just 20 days, you will gain complete online knowledge and understanding of the TET / TAIT syllabus.",
+        "■ You will get 15+ online practice question papers covering all five subjects of examination.",
+        "■ Model answer sheets and additional online guidance related to the TET / TAIT syllabus will be provided.",
+        "■ You will get one exclusive interactive video session on how to Face the TET / TAIT examination.",
+        "■ Separate subject wise five expert-guided video sessions, will be included.",
+        "■ This initiative is designed to make the TET / TAIT exam simple, clear, and easily manageable. Helping you become more capable, and confident. We are sure you will find this program truly beneficial.",
+        "Hope you've understood everything clearly...",
+        "Would you like to join our short-term yet highly effective and success-oriented initiative that offers rich, valuable guidance for the TET / TAIT examination and ensures outstanding results?"
+      ]
+    },
+    mr: {
+      title: "सर्व परीक्षार्थी उमेदवारांना...",
+      points: [
+        "आपण शिक्षक होण्याच्या अगदी उंबरठ्यावर असताना आपणास TET /TAIT या परीक्षेमध्ये परिपूर्ण यश मिळावे म्हणून आमच्या संस्थेच्या वतीने आम्ही हा खास उपक्रम राबवत आहोत.",
+        "CRACKTET हा अतिशय महत्त्वाकांक्षी आणि सर्व परीक्षार्थी यांच्यासाठी अत्यंत सोपा सुटसुटीत कमी व सुलभ शुल्कात एक कोचिंग प्रकार आहे.",
+        ">> परीक्षेला सामोरे जाताना TET /TAIT परीक्षेबाबत आपणांस सर्वकाही अवगत करून दिले जाईल.",
+        ">> आपल्या मनातील भीती नाहीसी व्हावी व आपण अत्यंत आत्मविश्वास आणि संयमाने या परीक्षेकडे पाहावे हा आमच्या संस्थेचा महत्त्वाचा उद्देश आहे.",
+        "आमच्या कोचिंगमधून आम्ही आपणांस काय देऊ...?",
+        "■ TET /TAIT परीक्षेचे अवघ्या वीस दिवसात ऑनलाईन परिपूर्ण ज्ञान मिळेल.",
+        "■ परीक्षेसाठी असणाऱ्या पाच विषयांच्या पंधरा प्लस सराव प्रश्नपत्रिका ऑनलाईन मिळतील.",
+        "■ TET /TAIT सराव प्रश्नपत्रिकांचे उत्तरे व इतर सर्व अनुषंगिक ऑनलाईन मार्गदर्शन यामध्ये समाविष्ट राहील.",
+        "■ TET /TAIT परीक्षेला सामोरे जाताना हा अतिशय महत्त्वाचा एक संवाद व्हिडिओ दिला जाईल.",
+        "■ TET /TAIT परीक्षेसाठी असलेल्या पाच विषयांवर तज्ञ मार्गदर्शक यांचा प्रत्येकी एक असे वेगवेगळे पाच स्वतंत्र संवाद व्हिडिओ दिले जातील.",
+        "■ TET /TAIT परीक्षा सोपी सुलभ व सहज व्हावी या परीक्षेबाबत सजगता व सक्षमता यावी असा हा उपक्रम निश्चित आपणास पसंत पडेल याची आम्हाला खात्री आहे.",
+        "आपले आता सर्व लक्षात आलेच असेलतर मग...",
+        "TET / TAIT परीक्षेसाठी अल्पकाळात भरघोस व अत्यंत उपयुक्त माहिती आणि हमखास यश मिळवून देणाऱ्या आमच्या उपक्रमात आपणास सहभागी व्हायचे आहे का ?"
+      ]
+    }
+  };
+
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-secondary-gray py-12">
+      {/* Welcome Popup */}
+      {showWelcomePopup && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 md:p-4"
+          onClick={() => setShowWelcomePopup(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ duration: 0.4, type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with language toggle */}
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-[#8CC63F] to-[#6FA030] flex-shrink-0">
+              <h2 className="text-lg md:text-2xl font-bold text-white">
+                {welcomeContent[popupLanguage].title}
+              </h2>
+              <div className="flex items-center space-x-2 md:space-x-4">
+                <div className="flex bg-white/20 rounded-lg p-0.5 md:p-1">
+                  <button
+                    onClick={() => setPopupLanguage('en')}
+                    className={`px-2 md:px-3 py-1 rounded-md text-xs md:text-sm font-medium transition-all ${
+                      popupLanguage === 'en'
+                        ? 'bg-white text-[#8CC63F] shadow-md'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => setPopupLanguage('mr')}
+                    className={`px-2 md:px-3 py-1 rounded-md text-xs md:text-sm font-medium transition-all ${
+                      popupLanguage === 'mr'
+                        ? 'bg-white text-[#8CC63F] shadow-md'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    मराठी
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowWelcomePopup(false)}
+                  className="text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition-all hover:rotate-90 duration-300"
+                >
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 md:p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                {welcomeContent[popupLanguage].points.map((point, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -50, y: 10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    transition={{ 
+                      duration: 0.6, 
+                      delay: 0.5 + index * 0.3, 
+                      ease: "easeOut" 
+                    }}
+                    className="text-gray-700 leading-relaxed font-sans text-sm md:text-base"
+                  >
+                    {point}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+              className="flex items-center justify-center p-4 md:p-6 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white flex-shrink-0"
+            >
+              <button
+                onClick={() => setShowWelcomePopup(false)}
+                className="w-full md:w-auto bg-gradient-to-r from-[#8CC63F] to-[#6FA030] text-white px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold text-base md:text-lg hover:from-[#6FA030] hover:to-[#5A8A26] transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              >
+                {popupLanguage === 'en' ? 'Continue to Registration →' : 'नोंदणी सुरू करा →'}
+              </button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -469,9 +608,7 @@ export default function Register() {
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        userId={registeredUserId || undefined}
-        userName={formData.name}
-        userMobile={formData.mobile}
+        registrationData={formData}
         registrationFee={registrationFee}
         onSuccess={() => {
           setShowSuccess(true);

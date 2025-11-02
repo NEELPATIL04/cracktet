@@ -1,17 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MdLanguage, MdMenu, MdClose } from "react-icons/md";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState("en");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, [pathname]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.isFullscreen === 'boolean') {
+        setIsFullscreen(customEvent.detail.isFullscreen);
+      }
+    };
+
+    window.addEventListener('fullscreenChange', handleFullscreenChange);
+    return () => window.removeEventListener('fullscreenChange', handleFullscreenChange);
+  }, []);
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch("/api/user/verify");
+      setIsLoggedIn(response.ok);
+    } catch (error) {
+      setIsLoggedIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/user/logout", { method: "POST" });
+      setIsLoggedIn(false);
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const languages = [
     { code: "en", name: "English" },
@@ -20,12 +59,17 @@ export default function Navbar() {
   ];
 
   const t = {
-    en: { home: "Home", courses: "Courses", register: "Register", language: "Language" },
-    hi: { home: "होम", courses: "कोर्स", register: "पंजीकरण", language: "भाषा" },
-    mr: { home: "मुख्यपृष्ठ", courses: "अभ्यासक्रम", register: "नोंदणी", language: "भाषा" },
+    en: { home: "Home", register: "Register", language: "Language" },
+    hi: { home: "होम", register: "पंजीकरण", language: "भाषा" },
+    mr: { home: "मुख्यपृष्ठ", register: "नोंदणी", language: "भाषा" },
   };
 
   const translations = t[language as keyof typeof t] || t.en;
+
+  // Hide navbar when in fullscreen mode
+  if (isFullscreen) {
+    return null;
+  }
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50 w-full">
@@ -81,10 +125,10 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-2">
             <Link
               href="/"
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 pathname === "/"
                   ? "text-blue-600 border-b-2 border-blue-600"
                   : "text-gray-700 hover:text-blue-600"
@@ -93,46 +137,64 @@ export default function Navbar() {
               {translations.home}
             </Link>
 
-            <Link
-              href="#"
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/courses"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-700 hover:text-blue-600"
-              }`}
-            >
-              {translations.courses}
-            </Link>
-            
-            <Link href="/register">
-              <motion.div
-                animate={{
-                  boxShadow: pathname === "/register" 
-                    ? [
-                        "0 0 5px #3b82f6",
-                        "0 0 20px #3b82f6, 0 0 30px #60a5fa",
-                        "0 0 5px #3b82f6"
-                      ]
-                    : [
-                        "0 0 0px transparent",
-                        "0 0 8px #e5e7eb",
-                        "0 0 0px transparent"
-                      ]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className={`px-6 py-2.5 rounded-md text-sm font-semibold transition-colors ${
-                  pathname === "/register"
-                    ? "text-white bg-blue-600 border-2 border-blue-600"
-                    : "text-gray-700 hover:text-blue-600 border-2 border-gray-300 hover:border-blue-400 bg-white"
-                }`}
+            {!isLoggedIn && (
+              <>
+                <Link href="/login" className="relative overflow-hidden">
+                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                    Login
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+
+                <Link href="/register" className="relative overflow-hidden">
+                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                    {translations.register}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+              </>
+            )}
+
+            {isLoggedIn && (
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
-                {translations.register}
-              </motion.div>
-            </Link>
+                Logout
+              </button>
+            )}
 
             {/* Language Toggle */}
             <div className="relative">
@@ -177,30 +239,65 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Register & Menu Buttons */}
-          <div className="md:hidden flex items-center space-x-3">
-            <Link href="/register">
-              <motion.div
-                animate={{
-                  boxShadow: [
-                    "0 0 3px #3b82f6",
-                    "0 0 15px #3b82f6, 0 0 20px #60a5fa",
-                    "0 0 3px #3b82f6"
-                  ]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className={`px-4 py-2 rounded-md text-xs font-semibold transition-colors ${
-                  pathname === "/register"
-                    ? "text-white bg-blue-600 border-2 border-blue-600"
-                    : "text-blue-600 bg-white border-2 border-blue-500"
-                }`}
+          <div className="md:hidden flex items-center space-x-2">
+            {!isLoggedIn && (
+              <>
+                <Link href="/login" className="relative overflow-hidden">
+                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                    Login
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+
+                <Link href="/register" className="relative overflow-hidden">
+                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                    {translations.register}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+              </>
+            )}
+
+            {isLoggedIn && (
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
-                {translations.register}
-              </motion.div>
-            </Link>
+                Logout
+              </button>
+            )}
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -238,17 +335,7 @@ export default function Navbar() {
                   {translations.home}
                 </Link>
 
-                <Link
-                  href="#"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block w-full text-left px-4 py-3 rounded-md text-sm font-medium transition-colors ${
-                    pathname === "/courses"
-                      ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {translations.courses}
-                </Link>
+     
 
                 <div className="px-4 pt-3 border-t border-gray-200">
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">

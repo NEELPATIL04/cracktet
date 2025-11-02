@@ -4,18 +4,64 @@ import { useEffect, useState } from "react";
 import { FaSpinner, FaTimes, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    contact: string;
+    email: string;
+  };
+  theme: {
+    color: string;
+  };
+  handler: (response: RazorpayResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+}
+
+interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayError {
+  error: {
+    description: string;
+  };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+  on: (event: string, handler: (response: RazorpayError) => void) => void;
+}
+
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
   }
+}
+
+interface RegistrationData {
+  name: string;
+  email: string;
+  district: string;
+  address: string;
+  mobile: string;
+  password: string;
+  confirmPassword: string;
 }
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId?: number;
-  userName: string;
-  userMobile: string;
+  registrationData: RegistrationData;
   registrationFee: number;
   onSuccess: () => void;
 }
@@ -23,9 +69,7 @@ interface PaymentModalProps {
 export default function PaymentModal({
   isOpen,
   onClose,
-  userId,
-  userName,
-  userMobile,
+  registrationData,
   registrationFee,
   onSuccess,
 }: PaymentModalProps) {
@@ -50,11 +94,20 @@ export default function PaymentModal({
     setError("");
 
     try {
-      // Create order
+      // Create order with registration data
       const orderResponse = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, mobile: userMobile, name: userName }),
+        body: JSON.stringify({
+          registrationData: {
+            name: registrationData.name,
+            email: registrationData.email,
+            district: registrationData.district,
+            address: registrationData.address,
+            mobile: registrationData.mobile,
+            password: registrationData.password,
+          }
+        }),
       });
 
       if (!orderResponse.ok) {
@@ -73,17 +126,17 @@ export default function PaymentModal({
         description: "Registration Fee",
         order_id: orderData.orderId,
         prefill: {
-          name: userName,
-          contact: userMobile,
-          email: orderData.user.email,
+          name: registrationData.name,
+          contact: registrationData.mobile,
+          email: registrationData.email,
         },
         theme: {
           color: "#F37254",
         },
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayResponse) {
           setPaymentStatus("processing");
-          
-          // Verify payment
+
+          // Verify payment and create user
           const verifyResponse = await fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -96,10 +149,10 @@ export default function PaymentModal({
 
           if (verifyResponse.ok) {
             setPaymentStatus("success");
-            
-            // Redirect to payment status page for polling
+
+            // Call onSuccess to show success message
             setTimeout(() => {
-              window.location.href = `/payment-status/${response.razorpay_order_id}`;
+              onSuccess();
             }, 1500);
           } else {
             throw new Error("Payment verification failed");
@@ -114,16 +167,16 @@ export default function PaymentModal({
 
       // Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", function (response: any) {
+      razorpay.on("payment.failed", function (response: RazorpayError) {
         setPaymentStatus("failed");
         setError(response.error.description || "Payment failed");
         setIsLoading(false);
       });
 
       razorpay.open();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Payment error:", error);
-      setError(error.message || "Failed to initialize payment");
+      setError(error instanceof Error ? error.message : "Failed to initialize payment");
       setPaymentStatus("failed");
     } finally {
       setIsLoading(false);
@@ -134,6 +187,7 @@ export default function PaymentModal({
     if (isOpen && paymentStatus === "idle") {
       initializePayment();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (

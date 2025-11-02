@@ -2,6 +2,7 @@
   "navbar": {
     "home": "Home",
     "register": "Register",
+    "login": "Login",
     "admin": "Admin",
     "language": "Language"
   },
@@ -173,5 +174,94 @@
       "invalidCredentials": "Invalid admin ID or password"
     },
     "redirecting": "Login successful! Redirecting..."
+  },
+  "pdfViewer": {
+    "initialWarning": {
+      "title": "IMPORTANT WARNING",
+      "subtitle": "DO NOT attempt to:",
+      "rules": [
+        "Take screenshots of this content",
+        "Download or save this PDF",
+        "Copy any text or content",
+        "Share or distribute this material"
+      ],
+      "banWarning": "VIOLATION WILL RESULT IN IMMEDIATE ACCOUNT BAN",
+      "noRefund": "NO REFUND WILL BE PROVIDED",
+      "proceed": "I Understand - Proceed to View PDF"
+    },
+    "violation": {
+      "title": "Screenshot Violation!",
+      "finalTitle": "FINAL VIOLATION - ACCOUNT BANNED!",
+      "detected": "Screenshot attempt detected and blocked.",
+      "violationNumber": "Violation #{count} of 3",
+      "warningsLeft": "{count} warning(s) remaining before permanent ban",
+      "finalMessage": "Account will be logged out immediately. All access revoked.",
+      "loggingOut": "Logging out in 2 seconds...",
+      "logged": "This violation has been logged and reported to administrators."
+    },
+    "devTools": {
+      "title": "Developer Tools Detected",
+      "message": "This action has been logged"
+    },
+    "warnings": {
+      "rightClick": "Right-click is disabled on this content",
+      "actionDisabled": "This action is disabled for content protection",
+      "copyDisabled": "Copying is disabled on this content"
+    }
+  },
+  "adminNotifications": {
+    "title": "Security Violations",
+    "subtitle": "Monitor user violations and screenshot attempts",
+    "table": {
+      "id": "ID",
+      "user": "User",
+      "email": "Email",
+      "resource": "Resource",
+      "type": "Type",
+      "violationNumber": "Strike",
+      "timestamp": "Time",
+      "notified": "Notified"
+    },
+    "noViolations": "No violations reported",
+    "loading": "Loading violations...",
+    "markNotified": "Mark as Notified",
+    "filter": {
+      "all": "All Violations",
+      "unnotified": "Unnotified Only",
+      "critical": "Critical (3 Strikes)"
+    }
+  },
+  "resources": {
+    "title": "Study Resources",
+    "subtitle": "Access your study materials and PDF resources",
+    "loading": "Loading resources...",
+    "noResources": "No Resources Available",
+    "noResourcesMessage": "Study materials will appear here once uploaded by admin.",
+    "showing": "Showing",
+    "resource": "resource",
+    "resources": "resources",
+    "fileSize": "File Size",
+    "added": "Added",
+    "viewResource": "View Resource",
+    "retry": "Retry",
+    "error": "Failed to load resources. Please try again."
+  },
+  "aboutUs": {
+    "title": "About Us",
+    "tagline": "| नानात्वेन सुदृढ: समाज: |",
+    "para1": "Relying on such thought Gramgaurav Foundation has its overwhelming influence in all sectors where we plan for growth and development.",
+    "para2": "Beyond this multiple perspectives on environmental, political, social issues are welcomed here as a NGO platform.",
+    "para3": "Crack TET is one of the initiative for the future teachers which will apparently help to step in the journey of examination and learning."
+  },
+  "contactUs": {
+    "title": "Contact Us",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "call": "Call"
+  },
+  "cta": {
+    "title": "Ready to Start Your TET Journey?",
+    "subtitle": "Join thousands of aspiring teachers preparing for Maharashtra TET",
+    "button": "Register Now"
   }
 }

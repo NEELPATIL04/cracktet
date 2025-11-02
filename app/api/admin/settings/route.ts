@@ -5,7 +5,7 @@ import { db } from '@/db';
 import { admins, appSettings } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-async function verifyAdmin(request: NextRequest): Promise<boolean> {
+async function verifyAdmin(_request: NextRequest): Promise<boolean> {
   const cookieStore = await cookies();
   const adminId = cookieStore.get('adminId')?.value;
 
