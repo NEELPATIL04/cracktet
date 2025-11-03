@@ -46,7 +46,6 @@ export default function Register() {
   const [popupLanguage, setPopupLanguage] = useState<'en' | 'mr'>('en');
 
   useEffect(() => {
-    // Fetch registration fee from settings
     fetch('/api/settings')
       .then(res => res.json())
       .then(data => {
@@ -62,7 +61,6 @@ export default function Register() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -119,7 +117,6 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      // Check if email or mobile already exists before proceeding to payment
       const checkResponse = await fetch("/api/check-user", {
         method: "POST",
         headers: {
@@ -144,7 +141,6 @@ export default function Register() {
         return;
       }
 
-      // Proceed to payment modal without creating user
       setShowPaymentModal(true);
     } catch (error) {
       console.error("Validation error:", error);
@@ -157,45 +153,59 @@ export default function Register() {
   const welcomeContent = {
     en: {
       title: "For All TET Aspirants",
-      points: [
-        "As you stand on the very threshold of becoming a teacher We, on behalf of our institution, are conducting this special initiative to help you achieve complete success in the TET / TAIT examination.",
-        "CRACKTET is a simple, easy-to-understand, and affordable coaching program designed especially for all aspirants.",
-        ">> While preparing for the examination, you will be guided through everything you need to know about the TET / TAIT exams.",
-        ">> Our key objective is to help you overcome exam-related fear and approach the test with complete confidence and composure.",
-        "What will you get through our coaching ?",
-        "■ In just 20 days, you will gain complete online knowledge and understanding of the TET / TAIT syllabus.",
-        "■ You will get 15+ online practice question papers covering all five subjects of examination.",
-        "■ Model answer sheets and additional online guidance related to the TET / TAIT syllabus will be provided.",
-        "■ You will get one exclusive interactive video session on how to Face the TET / TAIT examination.",
-        "■ Separate subject wise five expert-guided video sessions, will be included.",
-        "■ This initiative is designed to make the TET / TAIT exam simple, clear, and easily manageable. Helping you become more capable, and confident. We are sure you will find this program truly beneficial.",
-        "Hope you've understood everything clearly...",
-        "Would you like to join our short-term yet highly effective and success-oriented initiative that offers rich, valuable guidance for the TET / TAIT examination and ensures outstanding results?"
-      ]
+      introduction: "As you stand on the very threshold of becoming a teacher, we, on behalf of our institution, are conducting this special initiative to help you achieve complete success in the TET / TAIT examination.",
+      sections: [
+        {
+          heading: "About CRACKTET",
+          content: "CRACKTET is a simple, easy-to-understand, and affordable coaching program designed especially for all aspirants. While preparing for the examination, you will be guided through everything you need to know about the TET / TAIT exams. Our key objective is to help you overcome exam-related fear and approach the test with complete confidence and composure."
+        },
+        {
+          heading: "What You'll Get Through Our Coaching",
+          items: [
+            "Complete online knowledge and understanding of the TET / TAIT syllabus in just 20 days",
+            "15+ online practice question papers covering all five subjects of examination",
+            "Model answer sheets and additional online guidance related to the TET / TAIT syllabus",
+            "One exclusive interactive video session on how to face the TET / TAIT examination",
+            "Separate subject-wise five expert-guided video sessions"
+          ]
+        },
+        {
+          heading: "Our Promise",
+          content: "This initiative is designed to make the TET / TAIT exam simple, clear, and easily manageable, helping you become more capable and confident. We are sure you will find this program truly beneficial."
+        }
+      ],
+      closingQuestion: "Would you like to join our short-term yet highly effective and success-oriented initiative that offers rich, valuable guidance for the TET / TAIT examination and ensures outstanding results?"
     },
     mr: {
       title: "सर्व परीक्षार्थी उमेदवारांना...",
-      points: [
-        "आपण शिक्षक होण्याच्या अगदी उंबरठ्यावर असताना आपणास TET /TAIT या परीक्षेमध्ये परिपूर्ण यश मिळावे म्हणून आमच्या संस्थेच्या वतीने आम्ही हा खास उपक्रम राबवत आहोत.",
-        "CRACKTET हा अतिशय महत्त्वाकांक्षी आणि सर्व परीक्षार्थी यांच्यासाठी अत्यंत सोपा सुटसुटीत कमी व सुलभ शुल्कात एक कोचिंग प्रकार आहे.",
-        ">> परीक्षेला सामोरे जाताना TET /TAIT परीक्षेबाबत आपणांस सर्वकाही अवगत करून दिले जाईल.",
-        ">> आपल्या मनातील भीती नाहीसी व्हावी व आपण अत्यंत आत्मविश्वास आणि संयमाने या परीक्षेकडे पाहावे हा आमच्या संस्थेचा महत्त्वाचा उद्देश आहे.",
-        "आमच्या कोचिंगमधून आम्ही आपणांस काय देऊ...?",
-        "■ TET /TAIT परीक्षेचे अवघ्या वीस दिवसात ऑनलाईन परिपूर्ण ज्ञान मिळेल.",
-        "■ परीक्षेसाठी असणाऱ्या पाच विषयांच्या पंधरा प्लस सराव प्रश्नपत्रिका ऑनलाईन मिळतील.",
-        "■ TET /TAIT सराव प्रश्नपत्रिकांचे उत्तरे व इतर सर्व अनुषंगिक ऑनलाईन मार्गदर्शन यामध्ये समाविष्ट राहील.",
-        "■ TET /TAIT परीक्षेला सामोरे जाताना हा अतिशय महत्त्वाचा एक संवाद व्हिडिओ दिला जाईल.",
-        "■ TET /TAIT परीक्षेसाठी असलेल्या पाच विषयांवर तज्ञ मार्गदर्शक यांचा प्रत्येकी एक असे वेगवेगळे पाच स्वतंत्र संवाद व्हिडिओ दिले जातील.",
-        "■ TET /TAIT परीक्षा सोपी सुलभ व सहज व्हावी या परीक्षेबाबत सजगता व सक्षमता यावी असा हा उपक्रम निश्चित आपणास पसंत पडेल याची आम्हाला खात्री आहे.",
-        "आपले आता सर्व लक्षात आलेच असेलतर मग...",
-        "TET / TAIT परीक्षेसाठी अल्पकाळात भरघोस व अत्यंत उपयुक्त माहिती आणि हमखास यश मिळवून देणाऱ्या आमच्या उपक्रमात आपणास सहभागी व्हायचे आहे का ?"
-      ]
+      introduction: "आपण शिक्षक होण्याच्या अगदी उंबरठ्यावर असताना आपणास TET / TAIT या परीक्षेमध्ये परिपूर्ण यश मिळावे म्हणून आमच्या संस्थेच्या वतीने आम्ही हा खास उपक्रम राबवत आहोत.",
+      sections: [
+        {
+          heading: "CRACKTET विषयी",
+          content: "CRACKTET हा अतिशय महत्त्वाकांक्षी आणि सर्व परीक्षार्थी यांच्यासाठी अत्यंत सोपा, सुटसुटीत, कमी व सुलभ शुल्कात एक कोचिंग प्रकार आहे. परीक्षेला सामोरे जाताना TET / TAIT परीक्षेबाबत आपणांस सर्वकाही अवगत करून दिले जाईल. आपल्या मनातील भीती नाहीसी व्हावी व आपण अत्यंत आत्मविश्वास आणि संयमाने या परीक्षेकडे पाहावे हा आमच्या संस्थेचा महत्त्वाचा उद्देश आहे."
+        },
+        {
+          heading: "आमच्या कोचिंगमधून आम्ही आपणांस काय देऊ...?",
+          items: [
+            "TET / TAIT परीक्षेचे अवघ्या वीस दिवसात ऑनलाईन परिपूर्ण ज्ञान मिळेल",
+            "परीक्षेसाठी असणाऱ्या पाच विषयांच्या पंधरा प्लस सराव प्रश्नपत्रिका ऑनलाईन मिळतील",
+            "TET / TAIT सराव प्रश्नपत्रिकांचे उत्तरे व इतर सर्व अनुषंगिक ऑनलाईन मार्गदर्शन यामध्ये समाविष्ट राहील",
+            "TET / TAIT परीक्षेला सामोरे जाताना हा अतिशय महत्त्वाचा एक संवाद व्हिडिओ दिला जाईल",
+            "TET / TAIT परीक्षेसाठी असलेल्या पाच विषयांवर तज्ञ मार्गदर्शक यांचा प्रत्येकी एक असे वेगवेगळे पाच स्वतंत्र संवाद व्हिडिओ दिले जातील"
+          ]
+        },
+        {
+          heading: "आमचे आश्वासन",
+          content: "TET / TAIT परीक्षा सोपी, सुलभ व सहज व्हावी, या परीक्षेबाबत सजगता व सक्षमता यावी असा हा उपक्रम निश्चित आपणास पसंत पडेल याची आम्हाला खात्री आहे."
+        }
+      ],
+      closingQuestion: "TET / TAIT परीक्षेसाठी अल्पकाळात भरघोस व अत्यंत उपयुक्त माहिती आणि हमखास यश मिळवून देणाऱ्या आमच्या उपक्रमात आपणास सहभागी व्हायचे आहे का?"
     }
   };
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#8CC63F] to-[#6FA030] py-12">
-      {/* Welcome Popup */}
+    <main className="min-h-screen w-full overflow-x-hidden bg-[#7aae36] py-12">
+      {/* Enhanced Welcome Popup with Animation Reset on Language Change */}
       {showWelcomePopup && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -252,24 +262,76 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-4 md:p-6 overflow-y-auto flex-1">
-              <div className="space-y-4">
-                {welcomeContent[popupLanguage].points.map((point, index) => (
+            {/* Content with KEY prop to force remount on language change */}
+            <div key={popupLanguage} className="p-4 md:p-8 overflow-y-auto flex-1">
+              <div className="space-y-6">
+                {/* Introduction - Starts at 0.5s */}
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                  className="text-gray-700 leading-relaxed text-sm md:text-base font-medium"
+                >
+                  {welcomeContent[popupLanguage].introduction}
+                </motion.p>
+
+                {/* Sections - Each section starts 0.8s apart */}
+                {welcomeContent[popupLanguage].sections.map((section, sectionIndex) => (
                   <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -50, y: 10 }}
-                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    key={sectionIndex}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ 
                       duration: 0.6, 
-                      delay: 0.5 + index * 0.3, 
-                      ease: "easeOut" 
+                      delay: 1.0 + sectionIndex * 0.8
                     }}
-                    className="text-gray-700 leading-relaxed font-sans text-sm md:text-base"
+                    className="space-y-3"
                   >
-                    {point}
+                    {/* Section Heading */}
+                    <h3 className="text-[#8CC63F] font-bold text-base md:text-lg">
+                      {section.heading}
+                    </h3>
+
+                    {/* Section Content or Items */}
+                    {section.content ? (
+                      <p className="text-gray-700 leading-relaxed text-sm md:text-base pl-2">
+                        {section.content}
+                      </p>
+                    ) : (
+                      <ul className="list-disc list-outside pl-6 md:pl-8 space-y-2">
+                        {section.items?.map((item, itemIndex) => (
+                          <motion.li
+                            key={itemIndex}
+                            initial={{ opacity: 0, x: -30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ 
+                              duration: 0.5, 
+                              delay: 1.2 + sectionIndex * 0.8 + itemIndex * 0.3
+                            }}
+                            className="text-gray-700 leading-relaxed text-sm md:text-base marker:text-[#8CC63F] marker:text-lg"
+                          >
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    )}
                   </motion.div>
                 ))}
+
+                {/* Closing Question - Appears last with extra delay */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    delay: 4.5
+                  }}
+                  className="mt-6 p-4 bg-gradient-to-r from-[#8CC63F]/10 to-[#6FA030]/10 border-l-4 border-[#8CC63F] rounded-r-lg"
+                >
+                  <p className="text-gray-800 font-semibold text-sm md:text-base leading-relaxed">
+                    {welcomeContent[popupLanguage].closingQuestion}
+                  </p>
+                </motion.div>
               </div>
             </div>
 
@@ -581,9 +643,9 @@ export default function Register() {
                   return (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, x: -50, y: 20 }}
-                      animate={{ opacity: 1, x: 0, y: 0 }}
-                      transition={{ duration: 0.6, delay: 2.0 + index * 1.2, ease: "easeOut" }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
                       className="flex items-start space-x-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm"
                     >
                       <Icon className="text-2xl flex-shrink-0 mt-1 text-white" />

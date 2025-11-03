@@ -31,7 +31,7 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    // Hide initial logo after 3.5 seconds and show content (increased from 2s)
+    // Hide initial logo after 3.5 seconds and show content
     const logoTimer = setTimeout(() => {
       setShowLogo(false);
       setShowContent(true);
@@ -42,25 +42,24 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Text and Logo slideshow in hero section with different timing
     if (showHeroSlideshow) {
-      const slideInterval = setInterval(() => {
-        setCurrentSlideIndex((prevIndex) => {
-          const nextIndex = (prevIndex + 1) % slides.length;
-          // If moving to logo patch (index 1), use longer duration
-          // If moving to text (index 0), use shorter duration
-          const duration = nextIndex === 1 ? 5000 : 3000;
-          clearInterval(slideInterval);
-          setTimeout(() => {
-            setCurrentSlideIndex(nextIndex);
-          }, 0);
-          return prevIndex;
-        });
-      }, currentSlideIndex === 1 ? 5000 : 3000); // Logo shows for 5s, text for 3s
+      // Determine the duration based on current slide
+      const duration = currentSlideIndex === 0 ? 3000 : 5000; // Text shows for 3s, Logo for 5s
+      
+      const slideInterval = setTimeout(() => {
+        setCurrentSlideIndex((prevIndex) => (prevIndex + 1) % slides.length);
+      }, duration);
 
-      return () => clearInterval(slideInterval);
+      return () => clearTimeout(slideInterval);
     }
-  }, [showHeroSlideshow, slides.length, currentSlideIndex]);
+  }, [showHeroSlideshow, currentSlideIndex, slides.length]);
+
+  // Determine background color based on slide type
+  const getBackgroundStyle = () => {
+    return currentSlideIndex === 1 
+      ? "#FFFFFF" // White for logo patch
+      : "linear-gradient(to bottom right, #8CC63F, #6FA030)"; // Green gradient for text
+  };
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden">
@@ -94,11 +93,22 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
-      <section className="relative h-[400px] sm:h-[500px] md:h-[600px] w-full overflow-hidden bg-gradient-to-br from-[#8CC63F] to-[#6FA030]">
+      {/* Hero Section with Synchronized Background */}
+      <motion.section
+        key={`bg-${currentSlideIndex}`}
+        initial={{ background: getBackgroundStyle() }}
+        animate={{ 
+          background: getBackgroundStyle()
+        }}
+        transition={{ 
+          duration: 0.6, 
+          ease: "easeInOut"
+        }}
+        className="relative h-[400px] sm:h-[500px] md:h-[600px] w-full overflow-hidden"
+      >
         {/* Hero Content */}
         {showContent && (
-          <div className="relative z-10 h-full flex items-center justify-center text-white px-4">
+          <div className="relative z-10 h-full flex items-center justify-center px-4">
             <div className="text-center max-w-4xl mx-auto">
               {/* Hero Slideshow (Text and Logo Patch) */}
               <AnimatePresence mode="wait">
@@ -128,10 +138,10 @@ export default function Home() {
                           transition={{ duration: 0.3 }}
                           className="relative flex-shrink-0"
                         >
-                          <div className="h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 lg:h-56 lg:w-56 rounded-full flex items-center justify-center bg-white overflow-hidden shadow-2xl">
+                          <div className="h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 lg:h-56 lg:w-56  flex items-center justify-center  overflow-hidden ">
                             <div className="relative h-full w-full">
                               <Image
-                                src="/images/circle-logo.jpeg"
+                                src="/images/circle-logo-removebg.png"
                                 alt="CrackTET Logo"
                                 fill
                                 className="object-cover rounded-full"
@@ -143,17 +153,17 @@ export default function Home() {
                         </motion.div>
 
                         {/* Vertical Separator */}
-                        <div className="h-24 sm:h-32 md:h-40 lg:h-48 w-1 sm:w-1.5 bg-white self-center shadow-lg"></div>
+                        <div className="h-24 sm:h-32 md:h-40 lg:h-48 w-1 sm:w-1.5 bg-gray-800 self-center shadow-lg"></div>
 
-                        {/* Rectangular Logo with White Background */}
+                        {/* Rectangular Logo */}
                         <motion.div
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.3 }}
                           className="flex items-center justify-center relative self-center"
                         >
-                          <div className="relative h-24 w-[200px] sm:h-32 sm:w-[240px] md:h-40 md:w-[320px] lg:h-48 lg:w-[400px] bg-white rounded-2xl shadow-2xl p-2 sm:p-3 md:p-4">
+                          <div className="relative h-24 w-[200px] sm:h-32 sm:w-[240px] md:h-40 md:w-[320px] lg:h-48 lg:w-[400px]  x p-2 sm:p-3 md:p-4">
                             <Image
-                              src="/images/cracktet-white.jpeg"
+                              src="/images/cracktet-logo.png"
                               alt="CrackTET"
                               fill
                               className="object-contain"
@@ -168,15 +178,20 @@ export default function Home() {
                 )}
               </AnimatePresence>
 
-              {/* Register Button - always show when content is visible */}
+              {/* Register Button - Synchronized with background */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
+                key={`button-${currentSlideIndex}`}
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6 }}
               >
                 <Link
                   href="/register"
-                  className="inline-block bg-primary text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-primary-dark transition-colors shadow-lg"
+                  className={`inline-block px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all shadow-lg ${
+                    currentSlideIndex === 1
+                      ? "bg-[#8CC63F] text-white hover:bg-[#6FA030]" // Green button on white bg
+                      : "bg-white text-[#8CC63F] hover:bg-gray-100" // White button on green bg
+                  }`}
                 >
                   {t.navbar.register}
                 </Link>
@@ -184,7 +199,7 @@ export default function Home() {
             </div>
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* About TET Exam Section */}
       <section className="py-12 sm:py-16 bg-white">
@@ -313,9 +328,7 @@ export default function Home() {
                 FaLightbulb,
               ];
               const Icon = icons[index % icons.length];
-
-              // Zigzag pattern: alternate between blue and green
-              const bgColor = index % 2 === 0 ? "bg-[#00A9E0]" : "bg-[#8CC63F]"; // Blue and Green
+              const bgColor = index % 2 === 0 ? "bg-[#00A9E0]" : "bg-[#8CC63F]";
 
               return (
                 <motion.div
@@ -374,125 +387,82 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Us & Contact Us Section - Side by Side */}
+      {/* About Us & Contact Us Section */}
       <section className="bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {/* About Us */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="bg-gray-200 p-8 md:p-12 shadow-xl min-h-[400px] flex flex-col justify-center"
-            >
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
-                {t.aboutUs.title}
-              </h2>
-              <div className="text-center mb-4">
-                <p className="text-lg md:text-xl font-semibold text-gray-800 italic">
-                  {t.aboutUs.tagline}
-                </p>
-              </div>
-              <div className="space-y-4 text-gray-700 text-sm md:text-base leading-relaxed">
-                <p>
-                  {t.aboutUs.para1}
-                </p>
-                <p>
-                  {t.aboutUs.para2}
-                </p>
-                <p className="font-semibold">
-                  {t.aboutUs.para3}
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Contact Us */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="bg-primary p-6 md:p-8 shadow-xl"
-            >
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
-                {t.contactUs.title}
-              </h2>
-              <div className="space-y-6 text-white">
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-sm md:text-base">{t.contactUs.email}</p>
-                    <a href="mailto:cracktet2025@gmail.com" className="text-sm md:text-base hover:underline">
-                      cracktet2025@gmail.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-sm md:text-base">{t.contactUs.whatsapp}</p>
-                    <a href="https://wa.me/919226622570" className="text-sm md:text-base hover:underline" target="_blank" rel="noopener noreferrer">
-                      92266 22570
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-sm md:text-base">{t.contactUs.call}</p>
-                    <a href="tel:+918446447102" className="text-sm md:text-base hover:underline">
-                      84464 47102
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-      </section>
-
-      {/* Footer with Trademark */}
-      {/* <footer className="bg-[#0B1F3B] text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4">
-            <div className="text-sm md:text-base">
-              <p className="text-gray-400">
-                Made for <span className="font-semibold text-blue-400">Gram Gaurav</span> - Developed by{" "}
-                <a 
-                  href="https://webdrift.in" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 transition-colors underline"
-                >
-                  WebDrift.in
-                </a>
-                {" "}in collaboration with{" "}
-                <a 
-                  href="https://redcyberfox.in" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-red-400 hover:text-red-300 transition-colors underline"
-                >
-                  RedCyberFox.in
-                </a>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-200 p-8 md:p-12 shadow-xl min-h-[400px] flex flex-col justify-center"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
+              {t.aboutUs.title}
+            </h2>
+            <div className="text-center mb-4">
+              <p className="text-lg md:text-xl font-semibold text-gray-800 italic">
+                {t.aboutUs.tagline}
               </p>
             </div>
-            <div className="border-t border-gray-800 pt-4">
-              <p className="text-xs text-gray-500">
-                © {new Date().getFullYear()} CrackTET. All rights reserved.
-              </p>
+            <div className="space-y-4 text-gray-700 text-sm md:text-base leading-relaxed">
+              <p>{t.aboutUs.para1}</p>
+              <p>{t.aboutUs.para2}</p>
+              <p className="font-semibold">{t.aboutUs.para3}</p>
             </div>
-          </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-primary p-6 md:p-8 shadow-xl"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+              {t.contactUs.title}
+            </h2>
+            <div className="space-y-6 text-white">
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                </svg>
+                <div>
+                  <p className="font-semibold text-sm md:text-base">{t.contactUs.email}</p>
+                  <a href="mailto:cracktet2025@gmail.com" className="text-sm md:text-base hover:underline">
+                    cracktet2025@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                </svg>
+                <div>
+                  <p className="font-semibold text-sm md:text-base">{t.contactUs.whatsapp}</p>
+                  <a href="https://wa.me/919226622570" className="text-sm md:text-base hover:underline" target="_blank" rel="noopener noreferrer">
+                    92266 22570
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                </svg>
+                <div>
+                  <p className="font-semibold text-sm md:text-base">{t.contactUs.call}</p>
+                  <a href="tel:+918446447102" className="text-sm md:text-base hover:underline">
+                    84464 47102
+                  </a>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </footer> */}
+      </section>
     </main>
   );
 }
