@@ -6,6 +6,19 @@ import path from "path";
 import { existsSync } from "fs";
 import { randomUUID } from "crypto";
 
+// Configure API route to accept large payloads (500MB)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '500mb',
+    },
+  },
+};
+
+// Configure route segment for Next.js 15
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes timeout for large uploads
+
 export async function POST(request: NextRequest) {
   try {
     // ✅ Verify admin session (matches your login format)
@@ -54,11 +67,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 50MB)
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    // Validate file size (max 500MB for large PDFs)
+    const maxSize = 500 * 1024 * 1024; // 500MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: "File size must be less than 50MB" },
+        { error: "File size must be less than 500MB" },
         { status: 400 }
       );
     }
