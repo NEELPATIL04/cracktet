@@ -178,6 +178,7 @@ export default function ViewResourcePage() {
         userEmail={userData.email}
         userMobile={userData.mobile}
         pageCount={resource.pageCount}
+        resourceId={resource.uuid}
       />
     );
   }

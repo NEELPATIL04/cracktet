@@ -12,6 +12,7 @@ interface ProtectedPDFViewerProps {
   userEmail: string;
   userMobile: string;
   pageCount: number;
+  resourceId: string; // Add resource UUID for page-by-page loading
 }
 
 export default function ProtectedPDFViewer({
@@ -21,6 +22,7 @@ export default function ProtectedPDFViewer({
   userEmail,
   userMobile,
   pageCount,
+  resourceId,
 }: ProtectedPDFViewerProps) {
 
   const router = useRouter();
@@ -30,7 +32,6 @@ export default function ProtectedPDFViewer({
   const [devToolsOpen, setDevToolsOpen] = useState(false);
   const [devToolsShownOnce, setDevToolsShownOnce] = useState(false);
   const [scale, setScale] = useState(100);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -45,6 +46,76 @@ export default function ProtectedPDFViewer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [overlayBlack, setOverlayBlack] = useState(false);
   const [devToolsBlockedEntry, setDevToolsBlockedEntry] = useState(false);
+  
+  // Page-by-page loading state
+  const [pageCache, setPageCache] = useState<Map<number, string>>(new Map());
+  const [loadingPage, setLoadingPage] = useState<number | null>(null);
+  const [currentPageUrl, setCurrentPageUrl] = useState<string>("");
+
+  // Load specific page function
+  const loadPage = async (pageNum: number): Promise<string> => {
+    console.log(`📄 Loading page ${pageNum} for resource ${resourceId}`);
+    
+    // Check cache first
+    if (pageCache.has(pageNum)) {
+      const cachedUrl = pageCache.get(pageNum)!;
+      console.log(`✅ Page ${pageNum} found in cache`);
+      return cachedUrl;
+    }
+
+    try {
+      setLoadingPage(pageNum);
+      const response = await fetch(`/api/resources/${resourceId}/page/${pageNum}`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      // Update cache
+      setPageCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(pageNum, url);
+        
+        // Limit cache size to 5 pages
+        if (newCache.size > 5) {
+          const oldestEntry = Math.min(...Array.from(newCache.keys()));
+          const oldUrl = newCache.get(oldestEntry);
+          if (oldUrl) URL.revokeObjectURL(oldUrl);
+          newCache.delete(oldestEntry);
+        }
+        
+        return newCache;
+      });
+
+      console.log(`✅ Page ${pageNum} loaded and cached, size: ${(blob.size / 1024).toFixed(1)}KB`);
+      return url;
+
+    } catch (err) {
+      console.error(`❌ Error loading page ${pageNum}:`, err);
+      throw err;
+    } finally {
+      setLoadingPage(null);
+    }
+  };
+
+  // Preload adjacent pages for smooth navigation
+  const preloadPages = (centerPage: number) => {
+    const pagesToPreload = [centerPage - 1, centerPage + 1];
+    
+    pagesToPreload.forEach(pageNum => {
+      if (pageNum >= 1 && pageNum <= pageCount && !pageCache.has(pageNum)) {
+        console.log(`🔄 Preloading page ${pageNum} in background`);
+        loadPage(pageNum).catch(() => {
+          // Ignore preload errors
+          console.log(`⚠️ Failed to preload page ${pageNum}`);
+        });
+      }
+    });
+  };
 
   // Check for dev tools on component mount
   useEffect(() => {
@@ -114,52 +185,48 @@ export default function ProtectedPDFViewer({
 
   }, []);
 
-  // Load PDF as blob (only if dev tools not detected)
+  // Load current page (only if dev tools not detected)
   useEffect(() => {
     if (devToolsBlockedEntry) return; // Don't load PDF if dev tools detected
 
-    const loadPDF = async () => {
+    const loadCurrentPageEffect = async () => {
       try {
-        const response = await fetch(pdfUrl);
-
-        if (!response.ok) {
-          // Try to get error details from response
-          let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-          try {
-            const errorData = await response.json();
-            errorMsg = errorData.error || errorMsg;
-          } catch {
-            // Response is not JSON, use status text
-          }
-          console.error("❌ Server error:", errorMsg);
-          throw new Error(errorMsg);
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
-        // Use page count from database (now mandatory)
+        console.log(`📄 Loading page ${currentPage} of ${pageCount}`);
+        
+        // Set total pages immediately
         setTotalPages(pageCount);
-        console.log(`📄 PDF loaded with ${pageCount} pages from database`);
-
-        setPdfBlobUrl(url);
+        
+        // Load the current page
+        const pageUrl = await loadPage(currentPage);
+        setCurrentPageUrl(pageUrl);
+        
+        // Start preloading adjacent pages
+        setTimeout(() => preloadPages(currentPage), 500);
+        
         setPdfReady(true);
         setLoading(false);
+        
+        console.log(`✅ Page ${currentPage} ready for viewing`);
       } catch (err) {
-        console.error("❌ Error loading PDF:", err);
-        setError(err instanceof Error ? err.message : "Failed to load PDF");
+        console.error("❌ Error loading page:", err);
+        setError(err instanceof Error ? err.message : "Failed to load page");
         setLoading(false);
       }
     };
 
-    loadPDF();
+    loadCurrentPageEffect();
+  }, [currentPage, devToolsBlockedEntry, resourceId, pageCount]);
 
+  // Cleanup page URLs on unmount
+  useEffect(() => {
     return () => {
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
+      // Clean up all cached page URLs
+      pageCache.forEach(url => URL.revokeObjectURL(url));
+      if (currentPageUrl) {
+        URL.revokeObjectURL(currentPageUrl);
       }
     };
-  }, [pdfUrl, devToolsBlockedEntry]);
+  }, []);
 
   // ✅ Auto-enter browser fullscreen when PDF is ready (desktop only)
   useEffect(() => {
@@ -192,10 +259,10 @@ export default function ProtectedPDFViewer({
     };
 
     // Only try to enter fullscreen when PDF is actually ready
-    if (pdfReady && pdfBlobUrl && !showInitialWarning) {
+    if (pdfReady && currentPageUrl && !showInitialWarning) {
       enterFullscreen();
     }
-  }, [pdfReady, pdfBlobUrl, showInitialWarning]); // Triggered when PDF becomes ready
+  }, [pdfReady, currentPageUrl, showInitialWarning]); // Triggered when PDF becomes ready
 
   // ✅ Keyboard navigation for pages and overlay control
   useEffect(() => {
@@ -244,7 +311,7 @@ export default function ProtectedPDFViewer({
       setIsBlurred(false);
     };
 
-    if (pdfBlobUrl) {
+    if (currentPageUrl) {
       // Use capture phase to intercept before other handlers
       document.addEventListener('keydown', handleKeyboardNav, { capture: true });
     }
@@ -252,7 +319,7 @@ export default function ProtectedPDFViewer({
     return () => {
       document.removeEventListener('keydown', handleKeyboardNav, { capture: true });
     };
-  }, [currentPage, pdfBlobUrl, totalPages]);
+  }, [currentPage, currentPageUrl, totalPages]);
 
   // ✅ Listen for fullscreen changes from browser API
   useEffect(() => {
@@ -695,7 +762,7 @@ export default function ProtectedPDFViewer({
         const src = iframe.src || '';
         const fileExtensions = ['.pdf', '.doc', '.docx', '.zip', '.rar'];
         if (fileExtensions.some(ext => src.toLowerCase().includes(ext)) && 
-            !src.includes(pdfBlobUrl)) { // Allow our own PDF blob
+            !src.includes(currentPageUrl)) { // Allow our own PDF page blob
           e.preventDefault();
           e.stopPropagation();
           setWarningMessage("Downloads are disabled on protected content");
@@ -747,7 +814,7 @@ export default function ProtectedPDFViewer({
       window.open = originalOpen;
       URL.createObjectURL = originalCreateObjectURL;
     };
-  }, [pdfBlobUrl]);
+  }, [currentPageUrl]);
 
   // ✅ Enhanced protection against screenshots and downloads
   useEffect(() => {
@@ -1281,14 +1348,22 @@ export default function ProtectedPDFViewer({
               ))}
             </div>
 
-            {/* PDF iframe with page navigation */}
-            {pdfBlobUrl && (
+            {/* PDF iframe with current page only */}
+            {currentPageUrl && (
               <div className="relative w-full h-full pdf-container">
+                {loadingPage === currentPage && (
+                  <div className="absolute inset-0 z-20 bg-white bg-opacity-90 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                      <p className="text-gray-700 text-sm">Loading page {currentPage}...</p>
+                    </div>
+                  </div>
+                )}
                 <iframe
                   ref={iframeRef}
-                  src={`${pdfBlobUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=page-fit&page=${currentPage}`}
+                  src={`${currentPageUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=page-fit`}
                   className="w-full h-full border-0"
-                  title={resourceTitle}
+                  title={`${resourceTitle} - Page ${currentPage}`}
                   style={{ 
                     overflow: 'hidden'
                   }}
@@ -1406,7 +1481,7 @@ export default function ProtectedPDFViewer({
                         setCurrentPage(currentPage - 1);
                       }
                     }}
-                    disabled={currentPage <= 1}
+                    disabled={currentPage <= 1 || loadingPage !== null}
                     className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     title="Previous Page"
                   >
@@ -1424,11 +1499,17 @@ export default function ProtectedPDFViewer({
                         const page = Math.max(1, Math.min(totalPages || 999, parseInt(e.target.value) || 1));
                         setCurrentPage(page);
                       }}
-                      className="w-10 md:w-12 px-1 md:px-2 py-0.5 md:py-1 border border-gray-300 rounded text-center text-xs md:text-sm"
+                      disabled={loadingPage !== null}
+                      className="w-10 md:w-12 px-1 md:px-2 py-0.5 md:py-1 border border-gray-300 rounded text-center text-xs md:text-sm disabled:opacity-50"
                       min="1"
                       max={totalPages || 999}
                     />
                     <span className="text-xs md:text-sm">/ {totalPages || '?'}</span>
+                    {loadingPage !== null && (
+                      <div className="flex items-center ml-2">
+                        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -1437,7 +1518,7 @@ export default function ProtectedPDFViewer({
                         setCurrentPage(currentPage + 1);
                       }
                     }}
-                    disabled={totalPages > 0 && currentPage >= totalPages}
+                    disabled={(totalPages > 0 && currentPage >= totalPages) || loadingPage !== null}
                     className="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     title="Next Page"
                   >

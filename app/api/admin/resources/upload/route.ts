@@ -5,6 +5,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
 import { randomUUID } from "crypto";
+import { PDFDocument } from "pdf-lib";
 
 // Configure API route to accept large payloads (500MB)
 export const config = {
@@ -18,6 +19,72 @@ export const config = {
 // Configure route segment for Next.js 15
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes timeout for large uploads
+
+// Function to split PDF into individual pages
+async function splitPDFIntoPages(
+  pdfBuffer: Buffer, 
+  resourceUuid: string, 
+  uploadsDir: string
+): Promise<{ 
+  pageCount: number; 
+  pageFiles: Array<{ pageNumber: number; fileName: string; filePath: string; size: number }>; 
+  resourceDir: string;
+}> {
+  console.log(`📄 Starting PDF splitting for resource ${resourceUuid}`);
+  
+  // Load the original PDF
+  const originalPdf = await PDFDocument.load(pdfBuffer);
+  const pageCount = originalPdf.getPageCount();
+  
+  console.log(`📊 PDF has ${pageCount} pages`);
+  
+  // Create directory for this resource
+  const resourceDir = path.join(uploadsDir, `resource_${resourceUuid}`);
+  await mkdir(resourceDir, { recursive: true });
+  
+  const pageFiles = [];
+  
+  // Split each page
+  for (let i = 0; i < pageCount; i++) {
+    console.log(`📄 Processing page ${i + 1}/${pageCount}`);
+    
+    // Create new PDF document for single page
+    const singlePagePdf = await PDFDocument.create();
+    
+    // Copy specific page (i is 0-indexed)
+    const [copiedPage] = await singlePagePdf.copyPages(originalPdf, [i]);
+    singlePagePdf.addPage(copiedPage);
+    
+    // Save as individual PDF
+    const pageBytes = await singlePagePdf.save();
+    const pageFileName = `page_${i + 1}.pdf`;
+    const pageFilePath = path.join(resourceDir, pageFileName);
+    
+    await writeFile(pageFilePath, pageBytes);
+    
+    pageFiles.push({
+      pageNumber: i + 1,
+      fileName: pageFileName,
+      filePath: pageFilePath,
+      size: pageBytes.length
+    });
+    
+    console.log(`✅ Page ${i + 1} saved: ${(pageBytes.length / 1024).toFixed(1)}KB`);
+  }
+  
+  // Also save original PDF as backup
+  const originalPath = path.join(resourceDir, 'original.pdf');
+  await writeFile(originalPath, pdfBuffer);
+  console.log(`✅ Original PDF saved as backup`);
+  
+  console.log(`🎉 PDF splitting completed: ${pageCount} pages created`);
+  
+  return {
+    pageCount,
+    pageFiles,
+    resourceDir
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -87,29 +154,40 @@ export async function POST(request: NextRequest) {
       await mkdir(uploadDir, { recursive: true });
     }
 
-    // Save file
+    // Generate UUID for the resource
+    const resourceUuid = randomUUID();
+
+    // Save file and split into pages
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filePath = path.join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
-
+    
+    console.log(`📄 Starting PDF processing for ${originalName}`);
+    
+    // Split PDF into individual pages
+    const splitResult = await splitPDFIntoPages(buffer, resourceUuid, uploadDir);
+    
     // Calculate file size
     const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+    
+    // Calculate total split pages size
+    const totalSplitSize = splitResult.pageFiles.reduce((sum, page) => sum + page.size, 0);
+    const splitSizeInMB = (totalSplitSize / (1024 * 1024)).toFixed(2);
+    
+    console.log(`📊 Original size: ${fileSizeInMB}MB, Split size: ${splitSizeInMB}MB`);
 
     // Save to database with UUID
-    // For now, use admin ID 1 as default - you may want to get this from session
     const adminId = adminData?.id || 1;
     
     const [newResource] = await db
       .insert(resources)
       .values({
-        uuid: randomUUID(),
+        uuid: resourceUuid,
         title,
         description: description || "",
         fileName: originalName,
-        fileUrl: `/uploads/${fileName}`,
+        fileUrl: `/uploads/resource_${resourceUuid}`, // Points to directory instead of single file
         fileSize: `${fileSizeInMB} MB`,
-        pageCount,
+        pageCount: splitResult.pageCount, // Use actual page count from PDF
         uploadedBy: adminId,
         isActive: true,
       })
@@ -118,7 +196,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       resource: newResource,
-      message: "Resource uploaded successfully",
+      splitInfo: {
+        pageCount: splitResult.pageCount,
+        originalSize: `${fileSizeInMB} MB`,
+        splitSize: `${splitSizeInMB} MB`,
+        pageFiles: splitResult.pageFiles.length
+      },
+      message: `Resource uploaded and split into ${splitResult.pageCount} pages successfully`,
     });
   } catch (error) {
     console.error("Upload error:", error);
