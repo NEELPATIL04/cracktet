@@ -53,11 +53,11 @@ export async function GET(
 
     console.log(`✅ Resource found: ${resource.fileName}, loading page ${pageNum}/${resource.pageCount}`);
 
-    // Construct path to the specific page file
+    // Construct path to the specific page file in private storage
     const pagePath = path.join(
       process.cwd(), 
-      "public", 
-      "uploads", 
+      "storage", 
+      "pdfs", 
       `resource_${resource.uuid}`, 
       `page_${pageNum}.pdf`
     );

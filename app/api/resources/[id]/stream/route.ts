@@ -42,9 +42,9 @@ export async function GET(
     console.log("✅ Resource found:", resource.fileName);
     console.log("📄 File URL from DB:", resource.fileUrl);
 
-    // Read the PDF file using fileUrl which has the correct timestamp prefix
-    // fileUrl is like "/uploads/1234567890_filename.pdf"
-    const filePath = path.join(process.cwd(), "public", resource.fileUrl);
+    // Read the original PDF file from private storage
+    // fileUrl is like "/storage/pdfs/resource_uuid" - we need to append "original.pdf"
+    const filePath = path.join(process.cwd(), resource.fileUrl.substring(1), "original.pdf");
     console.log("📁 Reading file from:", filePath);
 
     const fileBuffer = await readFile(filePath);

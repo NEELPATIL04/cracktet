@@ -74,8 +74,8 @@ export async function GET(
 
     console.log("✅ Resource found:", resource.fileName);
 
-    // Read the PDF file
-    const filePath = path.join(process.cwd(), "public", resource.fileUrl);
+    // Read the PDF file from private storage
+    const filePath = path.join(process.cwd(), resource.fileUrl.substring(1), "original.pdf");
     const fileBuffer = await readFile(filePath);
     console.log("✅ File read successfully, size:", fileBuffer.length, "bytes");
 

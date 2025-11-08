@@ -148,10 +148,10 @@ export async function POST(request: NextRequest) {
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
 
-    // ✅ Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    // ✅ Ensure private storage directory exists
+    const storageDir = path.join(process.cwd(), "storage", "pdfs");
+    if (!existsSync(storageDir)) {
+      await mkdir(storageDir, { recursive: true });
     }
 
     // Generate UUID for the resource
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     console.log(`📄 Starting PDF processing for ${originalName}`);
     
     // Split PDF into individual pages
-    const splitResult = await splitPDFIntoPages(buffer, resourceUuid, uploadDir);
+    const splitResult = await splitPDFIntoPages(buffer, resourceUuid, storageDir);
     
     // Calculate file size
     const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
         title,
         description: description || "",
         fileName: originalName,
-        fileUrl: `/uploads/resource_${resourceUuid}`, // Points to directory instead of single file
+        fileUrl: `/storage/pdfs/resource_${resourceUuid}`, // Points to private storage directory
         fileSize: `${fileSizeInMB} MB`,
         pageCount: splitResult.pageCount, // Use actual page count from PDF
         uploadedBy: adminId,

@@ -38,4 +38,6 @@ next-env.d.ts
 
 # drizzle
 drizzle/
-public/
+
+# private storage
+storage/
