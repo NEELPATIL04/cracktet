@@ -10,6 +10,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; pageNumber: string }> }
 ) {
+  const { id: uuidParam, pageNumber } = await params;
+  const pageNum = parseInt(pageNumber);
+  
   try {
     // Verify user session
     const sessionCookie = request.cookies.get("user_session");
@@ -18,9 +21,6 @@ export async function GET(
       console.log("❌ Page API: No session cookie found");
       return NextResponse.json({ error: "Unauthorized - Please log in again" }, { status: 401 });
     }
-
-    const { id: uuidParam, pageNumber } = await params;
-    const pageNum = parseInt(pageNumber);
     
     console.log(`📄 Loading page ${pageNum} for resource ${uuidParam}`);
 
@@ -91,7 +91,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error(`❌ Error loading page ${pageNumber}:`, error);
+    console.error(`❌ Error loading page ${pageNum}:`, error);
     return NextResponse.json(
       { error: `Failed to load page: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
