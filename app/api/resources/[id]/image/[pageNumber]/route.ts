@@ -185,7 +185,7 @@ export async function GET(
       if (imageBuffer) {
         console.log(`🚀 Page ${pageNum} converted and served directly to user`);
         
-        return new NextResponse(imageBuffer, {
+        return new NextResponse(new Uint8Array(imageBuffer), {
           headers: {
             "Content-Type": "image/jpeg",
             "Cache-Control": "private, max-age=3600",
@@ -283,7 +283,7 @@ export async function GET(
     console.log(`✅ Image ${pageNum} loaded successfully, size: ${(imageBuffer.length / 1024).toFixed(1)}KB`);
 
     // Return the image with appropriate headers
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(new Uint8Array(imageBuffer), {
       headers: {
         "Content-Type": "image/jpeg",
         "Cache-Control": "private, max-age=3600", // Cache for 1 hour
