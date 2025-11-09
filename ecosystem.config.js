@@ -2,12 +2,12 @@ module.exports = {
   apps: [
     {
       name: "cracktet",
-      script: "npm",
+      script: "./node_modules/next/dist/bin/next",
       args: "start",
-      instances: "max", // use all CPU cores; or set a number like 2,4
-      exec_mode: "cluster", // cluster mode
+      instances: "max",
+      exec_mode: "cluster",
       autorestart: true,
-      watch: false, // keep watch disabled in production
+      watch: false,
       ignore_watch: ["node_modules", "storage", ".git", "logs"],
       max_memory_restart: "2G",
       node_args: "--max-old-space-size=2048",
