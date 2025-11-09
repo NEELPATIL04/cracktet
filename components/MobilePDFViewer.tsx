@@ -25,17 +25,19 @@ export default function MobilePDFViewer({
 }: MobilePDFViewerProps) {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [inputValue, setInputValue] = useState("1");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentPageUrl, setCurrentPageUrl] = useState("");
+  const [currentImageUrl, setCurrentImageUrl] = useState("");
 
-  // Load specific page for mobile
+  // Load specific page image for mobile
   const loadPage = async (pageNum: number) => {
     try {
       setLoading(true);
-      console.log(`📱 Loading mobile page ${pageNum} for resource ${resourceId}`);
+      console.log(`📱 Loading mobile image for page ${pageNum} of resource ${resourceId}`);
       
-      const response = await fetch(`/api/resources/${resourceId}/page/${pageNum}`);
+      // Try to load image first (optimized for mobile)
+      const response = await fetch(`/api/resources/${resourceId}/image/${pageNum}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));
@@ -44,12 +46,12 @@ export default function MobilePDFViewer({
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      setCurrentPageUrl(url);
+      setCurrentImageUrl(url);
       setLoading(false);
       
-      console.log(`✅ Mobile page ${pageNum} loaded successfully`);
+      console.log(`✅ Mobile image ${pageNum} loaded successfully`);
     } catch (err) {
-      console.error(`❌ Error loading mobile page ${pageNum}:`, err);
+      console.error(`❌ Error loading mobile image ${pageNum}:`, err);
       setError(err instanceof Error ? err.message : "Failed to load page");
       setLoading(false);
     }
@@ -58,11 +60,12 @@ export default function MobilePDFViewer({
   // Load current page on mount or page change
   useEffect(() => {
     loadPage(currentPage);
+    setInputValue(currentPage.toString());
     
-    // Cleanup previous page URL
+    // Cleanup previous image URL
     return () => {
-      if (currentPageUrl) {
-        URL.revokeObjectURL(currentPageUrl);
+      if (currentImageUrl) {
+        URL.revokeObjectURL(currentImageUrl);
       }
     };
   }, [currentPage, resourceId]);
@@ -166,21 +169,26 @@ export default function MobilePDFViewer({
         </div>
       </div>
 
-      {/* PDF Content Area */}
-      <div className="relative w-full h-full pt-20 pb-16 bg-white">
-        {currentPageUrl && (
+      {/* Image Content Area */}
+      <div className="relative w-full h-full pt-20 pb-16 bg-gray-900 overflow-auto">
+        {currentImageUrl && (
           <>
-            {/* PDF iframe */}
-            <iframe
-              src={`${currentPageUrl}#toolbar=0&navpanes=0&scrollbar=1&zoom=page-width`}
-              className="w-full h-full border-0"
-              title={`${resourceTitle} - Page ${currentPage}`}
-              style={{ 
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                background: 'white'
-              }}
-            />
+            {/* Page Image */}
+            <div className="flex items-center justify-center min-h-full p-4">
+              <img
+                src={currentImageUrl}
+                alt={`${resourceTitle} - Page ${currentPage}`}
+                className="max-w-full h-auto shadow-2xl"
+                style={{ 
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
+                  WebkitTouchCallout: 'none',
+                  pointerEvents: 'none'
+                }}
+                onContextMenu={(e) => e.preventDefault()}
+                draggable={false}
+              />
+            </div>
             
             {/* Mobile Watermarks */}
             <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
@@ -229,15 +237,35 @@ export default function MobilePDFViewer({
             <span className="text-sm text-gray-300">Page</span>
             <div className="flex items-center space-x-2">
               <input
-                type="number"
-                value={currentPage}
+                type="text"
+                value={inputValue}
                 onChange={(e) => {
-                  const page = Math.max(1, Math.min(pageCount, parseInt(e.target.value) || 1));
-                  setCurrentPage(page);
+                  const value = e.target.value;
+                  // Only allow digits
+                  if (value === '' || /^\d+$/.test(value)) {
+                    setInputValue(value);
+                  }
                 }}
-                className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-center text-white text-sm"
-                min="1"
-                max={pageCount}
+                onBlur={() => {
+                  const pageNum = parseInt(inputValue, 10);
+                  if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= pageCount) {
+                    setCurrentPage(pageNum);
+                  } else {
+                    setInputValue(currentPage.toString());
+                  }
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const pageNum = parseInt(inputValue, 10);
+                    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= pageCount) {
+                      setCurrentPage(pageNum);
+                    } else {
+                      setInputValue(currentPage.toString());
+                    }
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-center text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-300">/ {pageCount}</span>
             </div>

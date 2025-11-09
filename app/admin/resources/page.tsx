@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import AdminLayout from "../components/AdminLayout";
-import { FaFileAlt, FaSpinner, FaTrash, FaUpload, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaFileAlt, FaSpinner, FaTrash, FaUpload, FaEye, FaEyeSlash, FaImage } from "react-icons/fa";
 
 interface Resource {
   id: number;
+  uuid: string;
   title: string;
   description: string;
   fileName: string;
@@ -22,6 +23,7 @@ export default function AdminResourcesPage() {
   const [uploading, setUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [convertingId, setConvertingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -149,6 +151,32 @@ export default function AdminResourcesPage() {
       alert("Failed to delete resource");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleConvertToImages = async (id: number, uuid: string) => {
+    if (!confirm("This will convert the PDF to images for mobile viewing. Continue?")) {
+      return;
+    }
+
+    setConvertingId(id);
+    try {
+      const response = await fetch(`/api/admin/convert-to-images/${uuid}`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Successfully converted ${data.converted || 0} pages to images!`);
+      } else {
+        alert(`Failed to convert images: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error converting to images:", error);
+      alert("Failed to convert to images");
+    } finally {
+      setConvertingId(null);
     }
   };
 
@@ -393,6 +421,18 @@ export default function AdminResourcesPage() {
                           title={resource.isActive ? "Deactivate" : "Activate"}
                         >
                           {resource.isActive ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                        <button
+                          onClick={() => handleConvertToImages(resource.id, resource.uuid)}
+                          disabled={convertingId === resource.id}
+                          className="inline-flex items-center px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Convert to Images for Mobile"
+                        >
+                          {convertingId === resource.id ? (
+                            <FaSpinner className="animate-spin" />
+                          ) : (
+                            <FaImage />
+                          )}
                         </button>
                         <button
                           onClick={() => handleDelete(resource.id)}

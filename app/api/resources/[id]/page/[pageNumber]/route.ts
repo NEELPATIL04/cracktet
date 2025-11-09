@@ -12,21 +12,27 @@ export async function GET(
 ) {
   const { id: uuidParam, pageNumber } = await params;
   const pageNum = parseInt(pageNumber);
-  
+
   try {
     // Verify user session
     const sessionCookie = request.cookies.get("user_session");
-    
+
     if (!sessionCookie) {
       console.log("❌ Page API: No session cookie found");
-      return NextResponse.json({ error: "Unauthorized - Please log in again" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized - Please log in again" },
+        { status: 401 }
+      );
     }
-    
+
     console.log(`📄 Loading page ${pageNum} for resource ${uuidParam}`);
 
     // Validate page number
     if (isNaN(pageNum) || pageNum < 1) {
-      return NextResponse.json({ error: "Invalid page number" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid page number" },
+        { status: 400 }
+      );
     }
 
     // Fetch resource by UUID (must be active)
@@ -46,34 +52,46 @@ export async function GET(
 
     // Check if page number is valid
     if (pageNum > resource.pageCount) {
-      return NextResponse.json({ 
-        error: `Page number ${pageNum} exceeds total pages ${resource.pageCount}` 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Page number ${pageNum} exceeds total pages ${resource.pageCount}`,
+        },
+        { status: 400 }
+      );
     }
 
-    console.log(`✅ Resource found: ${resource.fileName}, loading page ${pageNum}/${resource.pageCount}`);
+    console.log(
+      `✅ Resource found: ${resource.fileName}, loading page ${pageNum}/${resource.pageCount}`
+    );
 
     // Construct path to the specific page file in private storage
     const pagePath = path.join(
-      process.cwd(), 
-      "storage", 
-      "pdfs", 
-      `resource_${resource.uuid}`, 
+      process.cwd(),
+      "storage",
+      "pdfs",
+      `resource_${resource.uuid}`,
       `page_${pageNum}.pdf`
     );
 
     // Check if page file exists
     if (!existsSync(pagePath)) {
       console.log(`❌ Page file not found: ${pagePath}`);
-      return NextResponse.json({ 
-        error: `Page ${pageNum} file not found. The PDF may not be properly split.` 
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: `Page ${pageNum} file not found. The PDF may not be properly split.`,
+        },
+        { status: 404 }
+      );
     }
 
     // Read the page file
     const pageBuffer = await readFile(pagePath);
-    
-    console.log(`✅ Page ${pageNum} loaded successfully, size: ${(pageBuffer.length / 1024).toFixed(1)}KB`);
+
+    console.log(
+      `✅ Page ${pageNum} loaded successfully, size: ${(
+        pageBuffer.length / 1024
+      ).toFixed(1)}KB`
+    );
 
     // Return the single page PDF with appropriate headers
     return new NextResponse(pageBuffer, {
@@ -89,11 +107,14 @@ export async function GET(
         "X-Frame-Options": "SAMEORIGIN",
       },
     });
-
   } catch (error) {
     console.error(`❌ Error loading page ${pageNum}:`, error);
     return NextResponse.json(
-      { error: `Failed to load page: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      {
+        error: `Failed to load page: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      },
       { status: 500 }
     );
   }

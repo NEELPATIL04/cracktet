@@ -6,6 +6,56 @@ import path from "path";
 import { existsSync } from "fs";
 import { randomUUID } from "crypto";
 import { PDFDocument } from "pdf-lib";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
+// Convert PDF to images using poppler pdftoppm
+async function convertPDFToImages(pdfBuffer: Buffer, outputDir: string, pageCount: number): Promise<void> {
+  try {
+    console.log(`🖼️ Converting PDF to images using pdftoppm: ${pageCount} pages`);
+    
+    // Save the PDF buffer to a temporary file first
+    const tempPdfPath = path.join(outputDir, 'temp_conversion.pdf');
+    await writeFile(tempPdfPath, pdfBuffer);
+    
+    // Convert first batch of pages immediately (progressive loading strategy)
+    const maxPages = Math.min(pageCount, 150); // Convert first 150 pages immediately
+    console.log(`🔄 Converting first ${maxPages} pages to JPEG images...`);
+    
+    // Use pdftoppm to convert PDF to JPEG images (cross-platform)
+    const pdftoppmPath = process.platform === 'darwin' ? '/opt/homebrew/bin/pdftoppm' : 'pdftoppm';
+    const command = `${pdftoppmPath} -jpeg -r 150 -f 1 -l ${maxPages} "${tempPdfPath}" "${path.join(outputDir, 'page')}"`;
+    
+    await execAsync(command);
+    
+    // Rename files from pdftoppm format (page-01.jpg) to our format (page_1.jpg)
+    let convertedCount = 0;
+    for (let i = 1; i <= maxPages; i++) {
+      const sourceFile = path.join(outputDir, `page-${i.toString().padStart(2, '0')}.jpg`);
+      const targetFile = path.join(outputDir, `page_${i}.jpg`);
+      
+      if (existsSync(sourceFile)) {
+        // Import fs module for rename
+        const fs = await import('fs/promises');
+        await fs.rename(sourceFile, targetFile);
+        convertedCount++;
+        console.log(`✅ Page ${i} converted successfully`);
+      }
+    }
+    
+    // Clean up temporary PDF file
+    const fs = await import('fs/promises');
+    await fs.unlink(tempPdfPath);
+    
+    console.log(`✅ Converted ${convertedCount}/${maxPages} pages to JPEG images using pdftoppm`);
+    
+  } catch (error) {
+    console.error(`❌ Error converting PDF to images:`, error);
+    console.log(`⚠️ Image conversion failed, mobile users will see SVG fallbacks`);
+  }
+}
 
 // Configure API route to accept large payloads (500MB)
 export const config = {
@@ -18,7 +68,7 @@ export const config = {
 
 // Configure route segment for Next.js 15
 export const runtime = 'nodejs';
-export const maxDuration = 300; // 5 minutes timeout for large uploads
+export const maxDuration = 900; // 15 minutes timeout for large uploads with image conversion
 
 // Function to split PDF into individual pages
 async function splitPDFIntoPages(
@@ -44,7 +94,12 @@ async function splitPDFIntoPages(
   
   const pageFiles = [];
   
-  // Split each page
+  // Create images subdirectory for future mobile conversion
+  const imagesDir = path.join(resourceDir, 'images');
+  await mkdir(imagesDir, { recursive: true });
+  console.log(`📁 Created images directory for future mobile conversion`);
+  
+  // Split each page into individual PDFs
   for (let i = 0; i < pageCount; i++) {
     console.log(`📄 Processing page ${i + 1}/${pageCount}`);
     
@@ -78,6 +133,9 @@ async function splitPDFIntoPages(
   console.log(`✅ Original PDF saved as backup`);
   
   console.log(`🎉 PDF splitting completed: ${pageCount} pages created`);
+  
+  // Convert PDF to images for mobile viewing
+  await convertPDFToImages(pdfBuffer, imagesDir, pageCount);
   
   return {
     pageCount,
