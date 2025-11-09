@@ -12,48 +12,64 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // Convert PDF to images using poppler pdftoppm
-async function convertPDFToImages(pdfBuffer: Buffer, outputDir: string, pageCount: number): Promise<void> {
+async function convertPDFToImages(
+  pdfBuffer: Buffer,
+  outputDir: string,
+  pageCount: number
+): Promise<void> {
   try {
-    console.log(`🖼️ Converting PDF to images using pdftoppm: ${pageCount} pages`);
-    
+    console.log(
+      `🖼️ Converting PDF to images using pdftoppm: ${pageCount} pages`
+    );
+
     // Save the PDF buffer to a temporary file first
-    const tempPdfPath = path.join(outputDir, 'temp_conversion.pdf');
+    const tempPdfPath = path.join(outputDir, "temp_conversion.pdf");
     await writeFile(tempPdfPath, pdfBuffer);
-    
+
     // Convert first batch of pages immediately (progressive loading strategy)
     const maxPages = Math.min(pageCount, 150); // Convert first 150 pages immediately
     console.log(`🔄 Converting first ${maxPages} pages to JPEG images...`);
-    
+
     // Use pdftoppm to convert PDF to JPEG images (cross-platform)
-    const pdftoppmPath = process.platform === 'darwin' ? '/opt/homebrew/bin/pdftoppm' : 'pdftoppm';
-    const command = `${pdftoppmPath} -jpeg -r 150 -f 1 -l ${maxPages} "${tempPdfPath}" "${path.join(outputDir, 'page')}"`;
-    
+    const pdftoppmPath =
+      process.platform === "darwin" ? "/opt/homebrew/bin/pdftoppm" : "pdftoppm";
+    const command = `${pdftoppmPath} -jpeg -r 150 -f 1 -l ${maxPages} "${tempPdfPath}" "${path.join(
+      outputDir,
+      "page"
+    )}"`;
+
     await execAsync(command);
-    
+
     // Rename files from pdftoppm format (page-01.jpg) to our format (page_1.jpg)
     let convertedCount = 0;
     for (let i = 1; i <= maxPages; i++) {
-      const sourceFile = path.join(outputDir, `page-${i.toString().padStart(2, '0')}.jpg`);
+      const sourceFile = path.join(
+        outputDir,
+        `page-${i.toString().padStart(2, "0")}.jpg`
+      );
       const targetFile = path.join(outputDir, `page_${i}.jpg`);
-      
+
       if (existsSync(sourceFile)) {
         // Import fs module for rename
-        const fs = await import('fs/promises');
+        const fs = await import("fs/promises");
         await fs.rename(sourceFile, targetFile);
         convertedCount++;
         console.log(`✅ Page ${i} converted successfully`);
       }
     }
-    
+
     // Clean up temporary PDF file
-    const fs = await import('fs/promises');
+    const fs = await import("fs/promises");
     await fs.unlink(tempPdfPath);
-    
-    console.log(`✅ Converted ${convertedCount}/${maxPages} pages to JPEG images using pdftoppm`);
-    
+
+    console.log(
+      `✅ Converted ${convertedCount}/${maxPages} pages to JPEG images using pdftoppm`
+    );
   } catch (error) {
     console.error(`❌ Error converting PDF to images:`, error);
-    console.log(`⚠️ Image conversion failed, mobile users will see SVG fallbacks`);
+    console.log(
+      `⚠️ Image conversion failed, mobile users will see SVG fallbacks`
+    );
   }
 }
 
@@ -61,86 +77,93 @@ async function convertPDFToImages(pdfBuffer: Buffer, outputDir: string, pageCoun
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '500mb',
+      sizeLimit: "500mb",
     },
   },
 };
 
 // Configure route segment for Next.js 15
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 export const maxDuration = 900; // 15 minutes timeout for large uploads with image conversion
 
 // Function to split PDF into individual pages
 async function splitPDFIntoPages(
-  pdfBuffer: Buffer, 
-  resourceUuid: string, 
+  pdfBuffer: Buffer,
+  resourceUuid: string,
   uploadsDir: string
-): Promise<{ 
-  pageCount: number; 
-  pageFiles: Array<{ pageNumber: number; fileName: string; filePath: string; size: number }>; 
+): Promise<{
+  pageCount: number;
+  pageFiles: Array<{
+    pageNumber: number;
+    fileName: string;
+    filePath: string;
+    size: number;
+  }>;
   resourceDir: string;
 }> {
   console.log(`📄 Starting PDF splitting for resource ${resourceUuid}`);
-  
+
   // Load the original PDF
   const originalPdf = await PDFDocument.load(pdfBuffer);
   const pageCount = originalPdf.getPageCount();
-  
+
   console.log(`📊 PDF has ${pageCount} pages`);
-  
+
   // Create directory for this resource
   const resourceDir = path.join(uploadsDir, `resource_${resourceUuid}`);
   await mkdir(resourceDir, { recursive: true });
-  
+
   const pageFiles = [];
-  
+
   // Create images subdirectory for future mobile conversion
-  const imagesDir = path.join(resourceDir, 'images');
+  const imagesDir = path.join(resourceDir, "images");
   await mkdir(imagesDir, { recursive: true });
   console.log(`📁 Created images directory for future mobile conversion`);
-  
+
   // Split each page into individual PDFs
   for (let i = 0; i < pageCount; i++) {
     console.log(`📄 Processing page ${i + 1}/${pageCount}`);
-    
+
     // Create new PDF document for single page
     const singlePagePdf = await PDFDocument.create();
-    
+
     // Copy specific page (i is 0-indexed)
     const [copiedPage] = await singlePagePdf.copyPages(originalPdf, [i]);
     singlePagePdf.addPage(copiedPage);
-    
+
     // Save as individual PDF
     const pageBytes = await singlePagePdf.save();
     const pageFileName = `page_${i + 1}.pdf`;
     const pageFilePath = path.join(resourceDir, pageFileName);
-    
+
     await writeFile(pageFilePath, pageBytes);
-    
+
     pageFiles.push({
       pageNumber: i + 1,
       fileName: pageFileName,
       filePath: pageFilePath,
-      size: pageBytes.length
+      size: pageBytes.length,
     });
-    
-    console.log(`✅ Page ${i + 1} saved: ${(pageBytes.length / 1024).toFixed(1)}KB`);
+
+    console.log(
+      `✅ Page ${i + 1} saved: ${(pageBytes.length / 1024).toFixed(1)}KB`
+    );
   }
-  
+
   // Also save original PDF as backup
-  const originalPath = path.join(resourceDir, 'original.pdf');
+  const originalPath = path.join(resourceDir, "original.pdf");
   await writeFile(originalPath, pdfBuffer);
   console.log(`✅ Original PDF saved as backup`);
-  
+
   console.log(`🎉 PDF splitting completed: ${pageCount} pages created`);
-  
+
   // Convert PDF to images for mobile viewing
-  await convertPDFToImages(pdfBuffer, imagesDir, pageCount);
-  
+  // await convertPDFToImages(pdfBuffer, imagesDir, pageCount);
+
   return {
     pageCount,
     pageFiles,
-    resourceDir
+    resourceDir,
   };
 }
 
@@ -167,19 +190,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
-    const pageCountStr = formData.get("pageCount") as string;
 
-    if (!file || !title || !pageCountStr) {
+    if (!file || !title) {
       return NextResponse.json(
-        { error: "File, title, and page count are required" },
-        { status: 400 }
-      );
-    }
-
-    const pageCount = parseInt(pageCountStr);
-    if (isNaN(pageCount) || pageCount <= 0) {
-      return NextResponse.json(
-        { error: "Page count must be a positive number" },
+        { error: "File and title are required" },
         { status: 400 }
       );
     }
@@ -218,24 +232,33 @@ export async function POST(request: NextRequest) {
     // Save file and split into pages
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    
+
     console.log(`📄 Starting PDF processing for ${originalName}`);
-    
+
     // Split PDF into individual pages
-    const splitResult = await splitPDFIntoPages(buffer, resourceUuid, storageDir);
-    
+    const splitResult = await splitPDFIntoPages(
+      buffer,
+      resourceUuid,
+      storageDir
+    );
+
     // Calculate file size
     const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-    
+
     // Calculate total split pages size
-    const totalSplitSize = splitResult.pageFiles.reduce((sum, page) => sum + page.size, 0);
+    const totalSplitSize = splitResult.pageFiles.reduce(
+      (sum, page) => sum + page.size,
+      0
+    );
     const splitSizeInMB = (totalSplitSize / (1024 * 1024)).toFixed(2);
-    
-    console.log(`📊 Original size: ${fileSizeInMB}MB, Split size: ${splitSizeInMB}MB`);
+
+    console.log(
+      `📊 Original size: ${fileSizeInMB}MB, Split size: ${splitSizeInMB}MB`
+    );
 
     // Save to database with UUID
     const adminId = adminData?.id || 1;
-    
+
     const [newResource] = await db
       .insert(resources)
       .values({
@@ -258,7 +281,7 @@ export async function POST(request: NextRequest) {
         pageCount: splitResult.pageCount,
         originalSize: `${fileSizeInMB} MB`,
         splitSize: `${splitSizeInMB} MB`,
-        pageFiles: splitResult.pageFiles.length
+        pageFiles: splitResult.pageFiles.length,
       },
       message: `Resource uploaded and split into ${splitResult.pageCount} pages successfully`,
     });

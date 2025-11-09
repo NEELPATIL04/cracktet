@@ -27,7 +27,6 @@ export default function AdminResourcesPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    pageCount: "",
     file: null as File | null,
   });
   const [uploadSuccess, setUploadSuccess] = useState("");
@@ -66,14 +65,8 @@ export default function AdminResourcesPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.file || !formData.title || !formData.pageCount) {
+    if (!formData.file || !formData.title) {
       setError("Please fill in all required fields");
-      return;
-    }
-
-    const pageCountNum = parseInt(formData.pageCount);
-    if (isNaN(pageCountNum) || pageCountNum <= 0) {
-      setError("Please enter a valid page count");
       return;
     }
 
@@ -85,7 +78,6 @@ export default function AdminResourcesPage() {
     uploadFormData.append("file", formData.file);
     uploadFormData.append("title", formData.title);
     uploadFormData.append("description", formData.description);
-    uploadFormData.append("pageCount", formData.pageCount);
 
     try {
       const response = await fetch("/api/admin/resources/upload", {
@@ -95,7 +87,7 @@ export default function AdminResourcesPage() {
 
       if (response.ok) {
         setUploadSuccess("Resource uploaded successfully!");
-        setFormData({ title: "", description: "", pageCount: "", file: null });
+        setFormData({ title: "", description: "", file: null });
         fetchResources();
         setTimeout(() => {
           setShowUploadModal(false);
@@ -259,20 +251,6 @@ export default function AdminResourcesPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Page Count *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={formData.pageCount}
-                  onChange={(e) => setFormData({ ...formData, pageCount: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
-                  placeholder="Enter number of pages"
-                />
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
