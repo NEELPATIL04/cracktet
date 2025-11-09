@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import AdminLayout from "../components/AdminLayout";
-import { FaFileAlt, FaSpinner, FaTrash, FaUpload, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaFileAlt, FaSpinner, FaTrash, FaUpload, FaEye, FaEyeSlash, FaImage } from "react-icons/fa";
 
 interface Resource {
   id: number;
+  uuid: string;
   title: string;
   description: string;
   fileName: string;
   fileSize: string;
+  pageCount: number;
   isActive: boolean;
   createdAt: string;
 }
@@ -21,6 +23,7 @@ export default function AdminResourcesPage() {
   const [uploading, setUploading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [convertingId, setConvertingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -143,6 +146,32 @@ export default function AdminResourcesPage() {
     }
   };
 
+  const handleConvertToImages = async (id: number, uuid: string) => {
+    if (!confirm("This will convert the PDF to images for mobile viewing. Continue?")) {
+      return;
+    }
+
+    setConvertingId(id);
+    try {
+      const response = await fetch(`/api/admin/convert-to-images/${uuid}`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Successfully converted ${data.converted || 0} pages to images!`);
+      } else {
+        alert(`Failed to convert images: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error converting to images:", error);
+      alert("Failed to convert to images");
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-IN", {
@@ -183,8 +212,8 @@ export default function AdminResourcesPage() {
             </div>
 
             {uploadSuccess && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-600">{uploadSuccess}</p>
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-600">{uploadSuccess}</p>
               </div>
             )}
 
@@ -221,6 +250,7 @@ export default function AdminResourcesPage() {
                   placeholder="Enter description (optional)"
                 />
               </div>
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -324,6 +354,7 @@ export default function AdminResourcesPage() {
                   <th className="px-6 py-4 text-left text-sm font-semibold">Title</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">File Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Size</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Pages</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Uploaded At</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
@@ -347,11 +378,12 @@ export default function AdminResourcesPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.fileName}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.fileSize}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{resource.pageCount}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           resource.isActive
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-blue-100 text-blue-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
@@ -367,6 +399,18 @@ export default function AdminResourcesPage() {
                           title={resource.isActive ? "Deactivate" : "Activate"}
                         >
                           {resource.isActive ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                        <button
+                          onClick={() => handleConvertToImages(resource.id, resource.uuid)}
+                          disabled={convertingId === resource.id}
+                          className="inline-flex items-center px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Convert to Images for Mobile"
+                        >
+                          {convertingId === resource.id ? (
+                            <FaSpinner className="animate-spin" />
+                          ) : (
+                            <FaImage />
+                          )}
                         </button>
                         <button
                           onClick={() => handleDelete(resource.id)}
@@ -415,12 +459,16 @@ export default function AdminResourcesPage() {
                     <span className="text-gray-600">Size:</span>
                     <span className="text-gray-900 font-medium">{resource.fileSize}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pages:</span>
+                    <span className="text-gray-900 font-medium">{resource.pageCount}</span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Status:</span>
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         resource.isActive
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-blue-100 text-blue-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >

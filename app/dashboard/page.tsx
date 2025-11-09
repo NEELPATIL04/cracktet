@@ -74,8 +74,8 @@ export default function DashboardPage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <FiCheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <FiCheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">

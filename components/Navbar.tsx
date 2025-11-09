@@ -6,15 +6,18 @@ import { MdLanguage, MdMenu, MdClose } from "react-icons/md";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+type Language = "en" | "hi" | "mr";
 
 export default function Navbar() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [language, setLanguage] = useState("en");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { t, language, setLanguage } = useLanguage();
 
   useEffect(() => {
     checkLoginStatus();
@@ -57,14 +60,6 @@ export default function Navbar() {
     { code: "hi", name: "हिंदी" },
     { code: "mr", name: "मराठी" },
   ];
-
-  const t = {
-    en: { home: "Home", register: "Register", language: "Language" },
-    hi: { home: "होम", register: "पंजीकरण", language: "भाषा" },
-    mr: { home: "मुख्यपृष्ठ", register: "नोंदणी", language: "भाषा" },
-  };
-
-  const translations = t[language as keyof typeof t] || t.en;
 
   // Hide navbar when in fullscreen mode
   if (isFullscreen) {
@@ -134,14 +129,14 @@ export default function Navbar() {
                   : "text-gray-700 hover:text-blue-600"
               }`}
             >
-              {translations.home}
+              {t.navbar.home}
             </Link>
 
             {!isLoggedIn && (
               <>
                 <Link href="/login" className="relative overflow-hidden">
                   <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
-                    Login
+                    {t.navbar.login}
                     <motion.span
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                       animate={{
@@ -164,7 +159,7 @@ export default function Navbar() {
 
                 <Link href="/register" className="relative overflow-hidden">
                   <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
-                    {translations.register}
+                    {t.navbar.register}
                     <motion.span
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                       animate={{
@@ -188,12 +183,36 @@ export default function Navbar() {
             )}
 
             {isLoggedIn && (
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
+              <>
+                <Link href="/dashboard/resources" className="relative overflow-hidden">
+                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                    {t.navbar.resources}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  {t.navbar.logout}
+                </button>
+              </>
             )}
 
             {/* Language Toggle */}
@@ -205,7 +224,7 @@ export default function Navbar() {
                 className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors border border-gray-300"
               >
                 <MdLanguage className="text-xl" />
-                <span>{translations.language}</span>
+                <span>{t.navbar.language || "Language"}</span>
               </motion.button>
 
               <AnimatePresence>
@@ -220,7 +239,7 @@ export default function Navbar() {
                       <button
                         key={lang.code}
                         onClick={() => {
-                          setLanguage(lang.code);
+                          setLanguage(lang.code as Language);
                           setShowLanguageMenu(false);
                         }}
                         className={`block w-full text-left px-4 py-3 text-sm transition-colors ${
@@ -244,7 +263,7 @@ export default function Navbar() {
               <>
                 <Link href="/login" className="relative overflow-hidden">
                   <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
-                    Login
+                    {t.navbar.login}
                     <motion.span
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                       animate={{
@@ -267,7 +286,7 @@ export default function Navbar() {
 
                 <Link href="/register" className="relative overflow-hidden">
                   <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
-                    {translations.register}
+                    {t.navbar.register}
                     <motion.span
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
                       animate={{
@@ -291,12 +310,36 @@ export default function Navbar() {
             )}
 
             {isLoggedIn && (
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
+              <>
+                <Link href="/dashboard/resources" className="relative overflow-hidden">
+                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                    {t.navbar.resources}
+                    <motion.span
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                      animate={{
+                        x: ['-200%', '200%']
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  {t.navbar.logout}
+                </button>
+              </>
             )}
 
             <button
@@ -332,21 +375,21 @@ export default function Navbar() {
                       : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  {translations.home}
+                  {t.navbar.home}
                 </Link>
 
      
 
                 <div className="px-4 pt-3 border-t border-gray-200">
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                    {translations.language}
+                    {t.navbar.language || "Language"}
                   </p>
                   <div className="space-y-2">
                     {languages.map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => {
-                          setLanguage(lang.code);
+                          setLanguage(lang.code as Language);
                         }}
                         className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                           language === lang.code

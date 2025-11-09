@@ -6,7 +6,7 @@ import bcrypt from "bcrypt"; // Add this import
 
 export async function POST(request: NextRequest) {
   try {
-    const { identifier, password } = await request.json();
+    const { identifier, password, userOS, userAgent, platform } = await request.json();
 
     if (!identifier || !password) {
       return NextResponse.json(
@@ -65,14 +65,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Set cookie
+    // Set cookie with OS information
     const sessionData = {
       id: user.id,
       name: user.name,
       email: user.email,
+      userOS: userOS || 'Unknown',
+      userAgent: userAgent || 'Unknown',
+      platform: platform || 'Unknown',
+      isMobileOS: userOS === 'Android' || userOS === 'iOS'
     };
 
-    console.log("✅ Setting user_session cookie for:", user.email);
+    console.log("✅ Setting user_session cookie for:", user.email, "OS:", userOS);
+    console.log("📱 User device info:", { userOS, platform, isMobileOS: userOS === 'Android' || userOS === 'iOS' });
 
     response.cookies.set("user_session", JSON.stringify(sessionData), {
       httpOnly: true,

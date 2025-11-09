@@ -4,11 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 import ProtectedPDFViewer from "@/components/ProtectedPDFViewer";
+import MobilePDFViewer from "@/components/MobilePDFViewer";
+import CustomMobilePDFViewer from "@/components/CustomMobilePDFViewer";
+import { useUser } from "@/contexts/UserContext";
 
 interface Resource {
   uuid: string;
   title: string;
   description: string;
+  pageCount: number;
 }
 
 interface UserData {
@@ -21,10 +25,40 @@ interface UserData {
 export default function ViewResourcePage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useUser();
   const [resource, setResource] = useState<Resource | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [serverMobileOS, setServerMobileOS] = useState(false);
+  const [serverUserOS, setServerUserOS] = useState('Unknown');
+  const [osCheckComplete, setOsCheckComplete] = useState(false);
+
+  // Check user's OS from server JWT token
+  const checkMobileOS = useCallback(async () => {
+    try {
+      console.log("🔍 Checking mobile OS from server...");
+      const response = await fetch("/api/user/check-mobile");
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📱 Server OS Check Response:", data);
+        
+        setServerMobileOS(data.isMobileOS);
+        setServerUserOS(data.userOS);
+      } else {
+        console.error("❌ Failed to check mobile OS from server");
+        setServerMobileOS(false);
+        setServerUserOS('Unknown');
+      }
+    } catch (error) {
+      console.error("❌ Error checking mobile OS:", error);
+      setServerMobileOS(false);
+      setServerUserOS('Unknown');
+    } finally {
+      setOsCheckComplete(true);
+    }
+  }, []);
 
   const fetchResource = useCallback(async (id: string) => {
     try {
@@ -64,19 +98,20 @@ export default function ViewResourcePage() {
   }, [router]);
 
   useEffect(() => {
-    // ✅ Fetch resource directly - API will verify session via httpOnly cookie
+    // ✅ Check mobile OS and fetch resource
     if (params.id) {
+      checkMobileOS();
       fetchResource(params.id as string);
     }
-  }, [params.id, fetchResource]);
+  }, [params.id, fetchResource, checkMobileOS]);
 
-  if (loading) {
+  if (loading || !osCheckComplete) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-900 text-lg font-semibold">Loading resource...</p>
-          <p className="text-gray-600 text-sm mt-2">Please wait...</p>
+          <p className="text-gray-600 text-sm mt-2">Checking device compatibility...</p>
         </div>
       </div>
     );
@@ -111,13 +146,41 @@ export default function ViewResourcePage() {
     );
   }
 
-  return (
-    <ProtectedPDFViewer
-      pdfUrl={`/api/resources/${resource.uuid}/stream`}
-      resourceTitle={resource.title}
-      userName={userData.name}
-      userEmail={userData.email}
-      userMobile={userData.mobile}
-    />
-  );
+  // Render appropriate PDF viewer based on server-verified OS
+  console.log(`📱 PDF Viewer routing - Server OS: ${serverUserOS}, isMobileOS: ${serverMobileOS}`);
+  
+  // Debug: Show which viewer will be used
+  if (serverMobileOS) {
+    console.log("🔄 Will use MobilePDFViewer for:", serverUserOS);
+  } else {
+    console.log("🔄 Will use ProtectedPDFViewer for:", serverUserOS);
+  }
+
+  if (serverMobileOS) {
+    console.log("📱 Loading Mobile PDF Viewer for:", serverUserOS);
+    return (
+      <MobilePDFViewer
+        pdfUrl={`/api/resources/${resource.uuid}/stream`}
+        resourceTitle={resource.title}
+        userName={userData.name}
+        userEmail={userData.email}
+        userMobile={userData.mobile}
+        pageCount={resource.pageCount}
+        resourceId={resource.uuid}
+      />
+    );
+  } else {
+    console.log("🖥️ Loading Desktop PDF Viewer for:", serverUserOS);
+    return (
+      <ProtectedPDFViewer
+        pdfUrl={`/api/resources/${resource.uuid}/stream`}
+        resourceTitle={resource.title}
+        userName={userData.name}
+        userEmail={userData.email}
+        userMobile={userData.mobile}
+        pageCount={resource.pageCount}
+        resourceId={resource.uuid}
+      />
+    );
+  }
 }

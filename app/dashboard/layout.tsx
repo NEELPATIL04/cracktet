@@ -106,7 +106,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-gray">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -134,13 +134,12 @@ export default function DashboardLayout({
     );
   }
 
-  const isActive = (path: string) => pathname === path;
   const sidebarWidth = sidebarCollapsed ? "w-16" : "w-64"; // Expanded sidebar
 
   console.log('Layout render - navbarVisible:', navbarVisible, 'sidebarVisible:', sidebarVisible, 'isPDFViewerPage:', isPDFViewerPage);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-secondary-gray">
+    <div className="fixed inset-0 overflow-hidden bg-gray-50">
       {/* Top Navbar */}
       {navbarVisible && (
         <nav className="absolute top-0 left-0 right-0 h-16 bg-primary text-white shadow-lg z-30 flex items-center justify-between px-6">
@@ -243,7 +242,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content */}
-      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${!sidebarVisible ? 'left-0' : (isPDFViewerPage ? 'left-0 lg:left-64' : (sidebarCollapsed ? 'left-16' : 'left-64'))} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
+      <main className={`absolute ${navbarVisible ? 'top-16' : 'top-0'} ${!sidebarVisible ? 'left-0' : (isPDFViewerPage ? 'left-0 lg:left-64' : 'left-0 lg:left-64')} right-0 bottom-0 transition-all duration-300 overflow-hidden`}>
         <div className={`w-full h-full ${isPDFViewerPage ? '' : 'overflow-auto p-6'}`}>
           {children}
         </div>

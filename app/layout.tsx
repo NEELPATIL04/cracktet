@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { UserProvider } from "@/contexts/UserContext";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
@@ -24,10 +25,12 @@ export default function RootLayout({
     <html lang="en" className="overflow-x-hidden">
       <body className="overflow-x-hidden">
         <LanguageProvider>
-          <Navbar />
-          <div className="w-full overflow-x-hidden">
-            {children}
-          </div>
+          <UserProvider>
+            <Navbar />
+            <div className="w-full overflow-x-hidden">
+              {children}
+            </div>
+          </UserProvider>
         </LanguageProvider>
       </body>
     </html>
