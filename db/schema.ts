@@ -76,6 +76,26 @@ export const violations = pgTable("violations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const videos = pgTable("videos", {
+  id: serial("id").primaryKey(),
+  uuid: varchar("uuid", { length: 36 }).notNull().unique(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnail_url"),
+  videoUrl: text("video_url").notNull(),
+  videoType: varchar("video_type", { length: 50 }).default("youtube").notNull(), // youtube, vimeo, upload, embed
+  duration: varchar("duration", { length: 20 }), // Format: HH:MM:SS
+  category: varchar("category", { length: 100 }),
+  tags: text("tags"), // Comma separated tags
+  views: integer("views").default(0).notNull(),
+  uploadedBy: serial("uploaded_by").references(() => admins.id).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  isPremium: boolean("is_premium").default(false).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Admin = typeof admins.$inferSelect;
@@ -88,3 +108,5 @@ export type Resource = typeof resources.$inferSelect;
 export type NewResource = typeof resources.$inferInsert;
 export type Violation = typeof violations.$inferSelect;
 export type NewViolation = typeof violations.$inferInsert;
+export type Video = typeof videos.$inferSelect;
+export type NewVideo = typeof videos.$inferInsert;

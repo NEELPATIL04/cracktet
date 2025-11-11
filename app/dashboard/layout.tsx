@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { FiFile, FiMenu, FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { MdVideoLibrary } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface User {
@@ -35,6 +36,8 @@ export default function DashboardLayout({
       return 'View Resource';
     } else if (pathname === '/dashboard/resources') {
       return 'Study Resources';
+    } else if (pathname?.includes('/dashboard/videos')) {
+      return 'Video Library';
     }
     return 'Dashboard';
   };
@@ -195,7 +198,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Menu Items */}
-        <nav className="flex-1 p-6">
+        <nav className="flex-1 p-6 space-y-2">
           <Link
             href="/dashboard/resources"
             onClick={() => setSidebarOpen(false)}
@@ -208,6 +211,20 @@ export default function DashboardLayout({
           >
             <FiFile className="w-5 h-5" />
             {!sidebarCollapsed && <span className="font-medium text-lg">Resources</span>}
+          </Link>
+          
+          <Link
+            href="/dashboard/videos"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-4 rounded-lg transition-colors group ${
+              pathname?.includes('/dashboard/videos')
+                ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
+                : "hover:bg-gray-50 text-gray-600"
+            }`}
+            title="Videos"
+          >
+            <MdVideoLibrary className="w-5 h-5" />
+            {!sidebarCollapsed && <span className="font-medium text-lg">Videos</span>}
           </Link>
         </nav>
 
