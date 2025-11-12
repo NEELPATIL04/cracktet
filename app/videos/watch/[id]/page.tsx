@@ -151,9 +151,9 @@ export default function PublicWatchVideoPage() {
               <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 p-4 mx-4 md:mx-6 mt-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-yellow-800 font-semibold">Free Preview Mode</p>
+                    <p className="text-yellow-800 font-semibold">Preview Mode</p>
                     <p className="text-yellow-700 text-sm mt-1">
-                      You&apos;re watching a {video.previewDuration}-second preview. Sign up for free to access the full video!
+                      You&apos;re watching a {video.previewDuration}-second preview. Get access to watch the full video!
                     </p>
                   </div>
                   <button 
@@ -161,8 +161,8 @@ export default function PublicWatchVideoPage() {
                     className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition whitespace-nowrap text-sm sm:text-base"
                   >
                     <FaUserPlus />
-                    <span className="hidden sm:inline">Sign Up Free</span>
-                    <span className="sm:hidden">Sign Up</span>
+                    <span className="hidden sm:inline">Get Access</span>
+                    <span className="sm:hidden">Get Access</span>
                   </button>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function PublicWatchVideoPage() {
                     <h3 className="text-lg font-semibold text-gray-800">Want to watch the full video?</h3>
                   </div>
                   <p className="text-gray-600 text-sm mb-4">
-                    Sign up for free to unlock complete access to this video and our entire educational library.
+                    Get access to unlock complete access to this video and our entire educational library.
                   </p>
                   <div className="flex gap-3">
                     <button
@@ -220,7 +220,7 @@ export default function PublicWatchVideoPage() {
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
                     >
                       <FaUserPlus />
-                      Sign Up Free
+                      Get Access
                     </button>
                     <button
                       onClick={() => router.push('/login')}

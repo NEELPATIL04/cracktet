@@ -124,7 +124,7 @@ export default function PublicResourcesPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
               >
                 <FaUserPlus />
-                Sign Up Free
+                Get Access
               </button>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function PublicResourcesPage() {
               <p className="text-yellow-800 font-semibold">Preview Mode</p>
             </div>
             <p className="text-yellow-700 text-sm">
-              You can preview all content below. Sign up for free to unlock full access to our educational materials!
+              You can preview all content below. Get full access to unlock complete educational materials and resources!
             </p>
           </div>
 

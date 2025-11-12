@@ -119,7 +119,7 @@ export default function PublicVideosPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
               >
                 <FaUserPlus />
-                Sign Up Free
+                Get Access
               </button>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function PublicVideosPage() {
               <p className="text-yellow-800 font-semibold">Preview Mode</p>
             </div>
             <p className="text-yellow-700 text-sm">
-              You can watch preview clips of all videos. Sign up for free to unlock full access to our educational content!
+              You can watch preview clips of all videos. Get access to unlock full access to our educational content!
             </p>
           </div>
         </div>
@@ -270,14 +270,14 @@ export default function PublicVideosPage() {
               Ready for Full Access?
             </h2>
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-              Sign up for free to unlock complete videos, access study resources, and track your learning progress.
+              Get access to unlock complete videos, access study resources, and track your learning progress.
             </p>
             <button
               onClick={() => router.push('/register')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition flex items-center gap-2 mx-auto"
             >
               <FaUserPlus />
-              Get Free Access Now
+              Get Access Now
             </button>
           </div>
         )}
