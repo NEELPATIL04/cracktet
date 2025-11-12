@@ -5,22 +5,22 @@ import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify user session
+    // Check for user session (optional for public viewing)
     const sessionCookie = request.cookies.get("user_session");
-    console.log("🔍 Resources API - Session cookie:", sessionCookie ? "exists" : "missing");
-
-    if (!sessionCookie) {
-      console.log("❌ No session cookie found");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Try to parse the session to verify it's valid
-    try {
-      const sessionData = JSON.parse(sessionCookie.value);
-      console.log("✅ Session valid for user:", sessionData.email);
-    } catch (e) {
-      console.log("❌ Invalid session data");
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+    let isAuthenticated = false;
+    
+    if (sessionCookie) {
+      try {
+        const sessionData = JSON.parse(sessionCookie.value);
+        console.log("✅ Session valid for user:", sessionData.email);
+        isAuthenticated = true;
+      } catch (e) {
+        console.log("❌ Invalid session data, treating as guest user");
+        isAuthenticated = false;
+      }
+    } else {
+      console.log("🔍 Guest user accessing resources");
+      isAuthenticated = false;
     }
 
     // Fetch only active resources with UUID

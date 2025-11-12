@@ -91,6 +91,7 @@ export const videos = pgTable("videos", {
   uploadedBy: serial("uploaded_by").references(() => admins.id).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   isPremium: boolean("is_premium").default(false).notNull(),
+  previewDuration: integer("preview_duration").default(20).notNull(), // Preview time in seconds for non-premium users
   sortOrder: integer("sort_order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
