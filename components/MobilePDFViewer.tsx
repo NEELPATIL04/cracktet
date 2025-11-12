@@ -12,6 +12,10 @@ interface MobilePDFViewerProps {
   userMobile: string;
   pageCount: number;
   resourceId: string;
+  isPremium?: boolean;
+  isPreviewMode?: boolean;
+  availablePages?: number;
+  hasPremiumAccess?: boolean;
 }
 
 export default function MobilePDFViewer({
@@ -22,6 +26,10 @@ export default function MobilePDFViewer({
   userMobile,
   pageCount,
   resourceId,
+  isPremium = false,
+  isPreviewMode = false,
+  availablePages,
+  hasPremiumAccess = false,
 }: MobilePDFViewerProps) {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);

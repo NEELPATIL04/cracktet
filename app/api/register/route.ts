@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert new user
+    // Insert new user - active by default for normal dashboard access
     const newUser = await db
       .insert(users)
       .values({
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
         address: validatedData.address,
         mobile: validatedData.mobile,
         password: validatedData.password, // In production, hash this password!
+        isActive: true, // Allow immediate dashboard access
       })
       .returning();
 

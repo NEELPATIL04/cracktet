@@ -14,6 +14,8 @@ interface Resource {
   fileSize: string;
   pageCount: number;
   isActive: boolean;
+  isPremium: boolean;
+  previewPages: number;
   createdAt: string;
 }
 
@@ -28,6 +30,8 @@ export default function AdminResourcesPage() {
     title: "",
     description: "",
     file: null as File | null,
+    isPremium: false,
+    previewPages: 3,
   });
   const [uploadSuccess, setUploadSuccess] = useState("");
   const [error, setError] = useState("");
@@ -78,6 +82,8 @@ export default function AdminResourcesPage() {
     uploadFormData.append("file", formData.file);
     uploadFormData.append("title", formData.title);
     uploadFormData.append("description", formData.description);
+    uploadFormData.append("isPremium", formData.isPremium.toString());
+    uploadFormData.append("previewPages", formData.previewPages.toString());
 
     try {
       const response = await fetch("/api/admin/resources/upload", {
@@ -87,7 +93,7 @@ export default function AdminResourcesPage() {
 
       if (response.ok) {
         setUploadSuccess("Resource uploaded successfully!");
-        setFormData({ title: "", description: "", file: null });
+        setFormData({ title: "", description: "", file: null, isPremium: false, previewPages: 3 });
         fetchResources();
         setTimeout(() => {
           setShowUploadModal(false);
@@ -270,6 +276,44 @@ export default function AdminResourcesPage() {
                 )}
               </div>
 
+              {/* Premium Settings */}
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-3">Access Settings</h4>
+                
+                <div className="flex items-center mb-4">
+                  <input
+                    type="checkbox"
+                    id="isPremium"
+                    checked={formData.isPremium}
+                    onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  />
+                  <label htmlFor="isPremium" className="ml-2 block text-sm text-gray-700">
+                    Premium Content (requires paid access)
+                  </label>
+                </div>
+
+                {formData.isPremium && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preview Pages (for non-premium users) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={formData.previewPages}
+                      onChange={(e) => setFormData({ ...formData, previewPages: parseInt(e.target.value) || 3 })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                      placeholder="Number of pages to show in preview"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Non-premium users will only see the first {formData.previewPages} pages
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="flex space-x-3 mt-6">
                 <button
                   type="submit"
@@ -355,6 +399,7 @@ export default function AdminResourcesPage() {
                   <th className="px-6 py-4 text-left text-sm font-semibold">File Name</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Size</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Pages</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Access</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Uploaded At</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
@@ -379,6 +424,24 @@ export default function AdminResourcesPage() {
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.fileName}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.fileSize}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{resource.pageCount}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            resource.isPremium
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {resource.isPremium ? "Premium" : "Free"}
+                        </span>
+                        {resource.isPremium && (
+                          <span className="text-xs text-gray-500">
+                            Preview: {resource.previewPages} pages
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -462,6 +525,25 @@ export default function AdminResourcesPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Pages:</span>
                     <span className="text-gray-900 font-medium">{resource.pageCount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Access:</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          resource.isPremium
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {resource.isPremium ? "Premium" : "Free"}
+                      </span>
+                      {resource.isPremium && (
+                        <span className="text-xs text-gray-500">
+                          Preview: {resource.previewPages} pages
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Status:</span>

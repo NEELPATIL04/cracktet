@@ -132,6 +132,30 @@ export default function Navbar() {
               {t.navbar.home}
             </Link>
 
+            {/* Resources - Always visible */}
+            <Link href={isLoggedIn ? "/dashboard/resources" : "/resources"} className="relative overflow-hidden">
+              <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
+                {t.navbar.resources}
+                <motion.span
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                  animate={{
+                    x: ['-200%', '200%']
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                    repeatDelay: 0.5
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none'
+                  }}
+                />
+              </span>
+            </Link>
+
             {!isLoggedIn && (
               <>
                 <Link href="/login" className="relative overflow-hidden">
@@ -183,36 +207,12 @@ export default function Navbar() {
             )}
 
             {isLoggedIn && (
-              <>
-                <Link href="/dashboard/resources" className="relative overflow-hidden">
-                  <span className="relative inline-block px-4 py-2 text-sm font-bold text-blue-600">
-                    {t.navbar.resources}
-                    <motion.span
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                      animate={{
-                        x: ['-200%', '200%']
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                        repeatDelay: 0.5
-                      }}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                >
-                  {t.navbar.logout}
-                </button>
-              </>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                {t.navbar.logout}
+              </button>
             )}
 
             {/* Language Toggle */}
@@ -259,6 +259,30 @@ export default function Navbar() {
 
           {/* Mobile Register & Menu Buttons */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Resources - Always visible */}
+            <Link href={isLoggedIn ? "/dashboard/resources" : "/resources"} className="relative overflow-hidden">
+              <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
+                {t.navbar.resources}
+                <motion.span
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                  animate={{
+                    x: ['-200%', '200%']
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                    repeatDelay: 0.5
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none'
+                  }}
+                />
+              </span>
+            </Link>
+
             {!isLoggedIn && (
               <>
                 <Link href="/login" className="relative overflow-hidden">
@@ -283,63 +307,16 @@ export default function Navbar() {
                     />
                   </span>
                 </Link>
-
-                <Link href="/register" className="relative overflow-hidden">
-                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
-                    {t.navbar.register}
-                    <motion.span
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                      animate={{
-                        x: ['-200%', '200%']
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                        repeatDelay: 0.5
-                      }}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </span>
-                </Link>
               </>
             )}
 
             {isLoggedIn && (
-              <>
-                <Link href="/dashboard/resources" className="relative overflow-hidden">
-                  <span className="relative inline-block px-3 py-1.5 text-xs font-bold text-blue-600">
-                    {t.navbar.resources}
-                    <motion.span
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-                      animate={{
-                        x: ['-200%', '200%']
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                        repeatDelay: 0.5
-                      }}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                >
-                  {t.navbar.logout}
-                </button>
-              </>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                {t.navbar.logout}
+              </button>
             )}
 
             <button

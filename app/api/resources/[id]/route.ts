@@ -38,6 +38,8 @@ export async function GET(
         name: users.name,
         email: users.email,
         mobile: users.mobile,
+        paymentStatus: users.paymentStatus,
+        isActive: users.isActive,
       })
       .from(users)
       .where(eq(users.id, sessionData.id))
@@ -61,14 +63,29 @@ export async function GET(
       );
     }
 
+    // Determine user access level
+    const hasPremiumAccess = user.paymentStatus === "completed" && user.isActive;
+    const isPreviewMode = resource.isPremium && !hasPremiumAccess;
+    const availablePages = isPreviewMode ? resource.previewPages : resource.pageCount;
+
     return NextResponse.json({
       resource: {
         uuid: resource.uuid,
         title: resource.title,
         description: resource.description,
         pageCount: resource.pageCount,
+        isPremium: resource.isPremium,
+        previewPages: resource.previewPages,
+        availablePages: availablePages,
+        isPreviewMode: isPreviewMode,
       },
-      user: user, // Include complete user data from database
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        hasPremiumAccess: hasPremiumAccess,
+      },
     });
   } catch (error) {
     console.error("Error fetching resource:", error);

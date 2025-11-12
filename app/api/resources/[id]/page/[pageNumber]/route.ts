@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { resources } from "@/db/schema";
+import { resources, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { readFile } from "fs/promises";
 import path from "path";
@@ -23,6 +23,30 @@ export async function GET(
         { error: "Unauthorized - Please log in again" },
         { status: 401 }
       );
+    }
+
+    // Parse session to get user data
+    let sessionData = null;
+    try {
+      sessionData = JSON.parse(sessionCookie.value);
+    } catch (e) {
+      console.error("Failed to parse session:", e);
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+    }
+
+    // Fetch user data to check premium access
+    const [user] = await db
+      .select({
+        id: users.id,
+        paymentStatus: users.paymentStatus,
+        isActive: users.isActive,
+      })
+      .from(users)
+      .where(eq(users.id, sessionData.id))
+      .limit(1);
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     console.log(`📄 Loading page ${pageNum} for resource ${uuidParam}`);
@@ -57,6 +81,23 @@ export async function GET(
           error: `Page number ${pageNum} exceeds total pages ${resource.pageCount}`,
         },
         { status: 400 }
+      );
+    }
+
+    // Check premium access and page restrictions
+    const hasPremiumAccess = user.paymentStatus === "completed" && user.isActive;
+    const isPreviewMode = resource.isPremium && !hasPremiumAccess;
+    
+    if (isPreviewMode && pageNum > resource.previewPages) {
+      console.log(`❌ Access denied: User requesting page ${pageNum} but only has preview access to first ${resource.previewPages} pages`);
+      return NextResponse.json(
+        {
+          error: `Access denied. This is a premium resource. You can only view the first ${resource.previewPages} pages. Please upgrade to access all ${resource.pageCount} pages.`,
+          isPremiumContent: true,
+          availablePages: resource.previewPages,
+          totalPages: resource.pageCount,
+        },
+        { status: 403 }
       );
     }
 
