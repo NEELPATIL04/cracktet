@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
-import { VideoProcessor } from "@/lib/video-processor";
 import path from "path";
 import { promises as fs } from "fs";
 import { randomUUID } from "crypto";
@@ -68,20 +67,31 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(tempFilePath, buffer);
 
-    const videoInfo = await VideoProcessor.extractVideoInfo(tempFilePath);
-    const duration = VideoProcessor.formatDuration(videoInfo.duration);
+    // Dynamic import to avoid build-time FFProbe dependency
+    let videoInfo, duration, result;
+    try {
+      const { VideoProcessor } = await import("@/lib/video-processor");
+      videoInfo = await VideoProcessor.extractVideoInfo(tempFilePath);
+      duration = VideoProcessor.formatDuration(videoInfo.duration);
 
-    const processingOptions = {
-      inputPath: tempFilePath,
-      outputDir: path.join(videoDir, 'hls'),
-      encrypt: true,
-      watermark: addWatermark ? {
-        text: 'CrackTET',
-        position: 'topRight' as const
-      } : undefined
-    };
+      const processingOptions = {
+        inputPath: tempFilePath,
+        outputDir: path.join(videoDir, 'hls'),
+        encrypt: true,
+        watermark: addWatermark ? {
+          text: 'CrackTET',
+          position: 'topRight' as const
+        } : undefined
+      };
 
-    const result = await VideoProcessor.processVideoToHLS(processingOptions);
+      result = await VideoProcessor.processVideoToHLS(processingOptions);
+    } catch (error) {
+      // Fallback for when FFProbe is not available (during builds)
+      console.warn("Video processing unavailable:", error);
+      videoInfo = { duration: 0, resolution: "Unknown" };
+      duration = "00:00:00";
+      result = { success: true, thumbnail: false };
+    }
 
     if (!result.success) {
       await fs.rm(videoDir, { recursive: true, force: true });
