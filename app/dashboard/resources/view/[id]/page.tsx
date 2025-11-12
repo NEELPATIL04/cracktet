@@ -13,6 +13,10 @@ interface Resource {
   title: string;
   description: string;
   pageCount: number;
+  isPremium: boolean;
+  previewPages: number;
+  availablePages: number;
+  isPreviewMode: boolean;
 }
 
 interface UserData {
@@ -20,6 +24,7 @@ interface UserData {
   name: string;
   email: string;
   mobile: string;
+  hasPremiumAccess: boolean;
 }
 
 export default function ViewResourcePage() {
@@ -167,6 +172,10 @@ export default function ViewResourcePage() {
         userMobile={userData.mobile}
         pageCount={resource.pageCount}
         resourceId={resource.uuid}
+        isPremium={resource.isPremium}
+        isPreviewMode={resource.isPreviewMode}
+        availablePages={resource.availablePages}
+        hasPremiumAccess={userData.hasPremiumAccess}
       />
     );
   } else {
@@ -180,6 +189,10 @@ export default function ViewResourcePage() {
         userMobile={userData.mobile}
         pageCount={resource.pageCount}
         resourceId={resource.uuid}
+        isPremium={resource.isPremium}
+        isPreviewMode={resource.isPreviewMode}
+        availablePages={resource.availablePages}
+        hasPremiumAccess={userData.hasPremiumAccess}
       />
     );
   }

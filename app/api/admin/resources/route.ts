@@ -26,12 +26,16 @@ export async function GET(request: NextRequest) {
     const allResources = await db
       .select({
         id: resources.id,
+        uuid: resources.uuid,
         title: resources.title,
         description: resources.description,
         fileName: resources.fileName,
         fileSize: resources.fileSize,
         fileUrl: resources.fileUrl,
+        pageCount: resources.pageCount,
         isActive: resources.isActive,
+        isPremium: resources.isPremium,
+        previewPages: resources.previewPages,
         createdAt: resources.createdAt,
       })
       .from(resources)

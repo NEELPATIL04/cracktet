@@ -13,6 +13,10 @@ interface ProtectedPDFViewerProps {
   userMobile: string;
   pageCount: number;
   resourceId: string; // Add resource UUID for page-by-page loading
+  isPremium?: boolean;
+  isPreviewMode?: boolean;
+  availablePages?: number;
+  hasPremiumAccess?: boolean;
 }
 
 export default function ProtectedPDFViewer({
@@ -23,6 +27,10 @@ export default function ProtectedPDFViewer({
   userMobile,
   pageCount,
   resourceId,
+  isPremium = false,
+  isPreviewMode = false,
+  availablePages,
+  hasPremiumAccess = false,
 }: ProtectedPDFViewerProps) {
 
   const router = useRouter();

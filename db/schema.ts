@@ -60,6 +60,8 @@ export const resources = pgTable("resources", {
   pageCount: integer("page_count").notNull(),
   uploadedBy: serial("uploaded_by").references(() => admins.id).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  isPremium: boolean("is_premium").default(false).notNull(),
+  previewPages: integer("preview_pages").default(3).notNull(), // Number of pages to show for preview
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

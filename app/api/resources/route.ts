@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       isAuthenticated = false;
     }
 
-    // Fetch only active resources with UUID
+    // Fetch only active resources with UUID and premium info
     const activeResources = await db
       .select({
         id: resources.id,
@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
         description: resources.description,
         fileName: resources.fileName,
         fileSize: resources.fileSize,
+        pageCount: resources.pageCount,
+        isPremium: resources.isPremium,
+        previewPages: resources.previewPages,
         createdAt: resources.createdAt,
       })
       .from(resources)

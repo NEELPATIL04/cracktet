@@ -190,6 +190,8 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File;
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
+    const isPremium = formData.get("isPremium") === "true";
+    const previewPages = parseInt(formData.get("previewPages") as string) || 3;
 
     if (!file || !title) {
       return NextResponse.json(
@@ -271,6 +273,8 @@ export async function POST(request: NextRequest) {
         pageCount: splitResult.pageCount, // Use actual page count from PDF
         uploadedBy: adminId,
         isActive: true,
+        isPremium,
+        previewPages,
       })
       .returning();
 

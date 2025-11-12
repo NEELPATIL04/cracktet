@@ -13,6 +13,8 @@ interface Resource {
   fileName: string;
   fileSize: string | null;
   pageCount: number;
+  isPremium: boolean;
+  previewPages: number;
   createdAt: string;
 }
 
@@ -36,7 +38,7 @@ export default function PublicResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'all' | 'pdfs' | 'videos'>('all');
+  const [activeTab, setActiveTab] = useState<'videos'>('videos');
 
   useEffect(() => {
     fetchData();
@@ -44,21 +46,17 @@ export default function PublicResourcesPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch both resources and videos in parallel
-      const [resourcesResponse, videosResponse] = await Promise.all([
-        fetch('/api/resources'),
-        fetch('/api/videos')
-      ]);
-      
-      if (resourcesResponse.ok) {
-        const resourcesData = await resourcesResponse.json();
-        setResources(resourcesData.resources || []);
-      }
+      // For now, only fetch videos for non-logged-in users
+      // Don't show PDFs to guests
+      const videosResponse = await fetch('/api/videos');
       
       if (videosResponse.ok) {
         const videosData = await videosResponse.json();
         setVideos(videosData.videos || []);
       }
+      
+      // Don't fetch resources (PDFs) for non-logged-in users
+      setResources([]);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -136,95 +134,23 @@ export default function PublicResourcesPage() {
               <p className="text-yellow-800 font-semibold">Preview Mode</p>
             </div>
             <p className="text-yellow-700 text-sm">
-              You can preview all content below. Get full access to unlock complete educational materials and resources!
+              You can preview videos below. Login to access PDF study materials and get full access to all educational content!
             </p>
           </div>
 
-          {/* Tabs */}
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition ${
-                activeTab === 'all' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              All Resources ({resources.length + videos.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('pdfs')}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition ${
-                activeTab === 'pdfs' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              PDFs ({resources.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition ${
-                activeTab === 'videos' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Videos ({videos.length})
-            </button>
+          {/* Video Count Display */}
+          <div className="bg-white rounded-lg p-4 mb-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Available Video Previews</h2>
+            <p className="text-gray-600 text-sm">
+              {videos.length} video{videos.length !== 1 ? 's' : ''} available for preview
+            </p>
           </div>
         </div>
 
-        {/* Content Grid */}
+        {/* Content Grid - Only Videos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* PDF Resources */}
-          {(activeTab === 'all' || activeTab === 'pdfs') && resources.map((resource) => (
-            <div
-              key={`pdf-${resource.id}`}
-              onClick={() => handleResourceClick(resource.uuid)}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden border group"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FaFileAlt className="text-red-500 text-xl" />
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-medium">
-                      PDF
-                    </span>
-                  </div>
-                  <FaLock className="text-gray-400" />
-                </div>
-                
-                <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {resource.title}
-                </h3>
-                
-                {resource.description && (
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {resource.description}
-                  </p>
-                )}
-                
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                  <span>{resource.pageCount} pages</span>
-                  <span>{formatFileSize(resource.fileSize)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">
-                    {formatDate(resource.createdAt)}
-                  </span>
-                  <div className="flex items-center gap-1 text-blue-500 hover:text-blue-600">
-                    <FaEye />
-                    <span className="text-sm">Preview</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
           {/* Video Resources */}
-          {(activeTab === 'all' || activeTab === 'videos') && videos.map((video) => (
+          {videos.map((video) => (
             <div
               key={`video-${video.id}`}
               onClick={() => handleVideoClick(video.uuid)}
@@ -309,21 +235,15 @@ export default function PublicResourcesPage() {
           ))}
         </div>
 
-        {/* No content found */}
-        {((activeTab === 'all' && resources.length === 0 && videos.length === 0) ||
-          (activeTab === 'pdfs' && resources.length === 0) ||
-          (activeTab === 'videos' && videos.length === 0)) && !loading && (
+        {/* No videos found */}
+        {videos.length === 0 && !loading && (
           <div className="text-center py-12">
-            {activeTab === 'videos' ? (
-              <MdVideoLibrary className="text-6xl text-gray-300 mx-auto mb-4" />
-            ) : (
-              <FaFileAlt className="text-6xl text-gray-300 mx-auto mb-4" />
-            )}
+            <MdVideoLibrary className="text-6xl text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No {activeTab === 'all' ? 'resources' : activeTab} found
+              No videos found
             </h3>
             <p className="text-gray-500">
-              No {activeTab === 'all' ? 'content' : activeTab} is available at the moment
+              No videos are available at the moment
             </p>
           </div>
         )}
