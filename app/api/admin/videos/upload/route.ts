@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     let adminData = null;
     try {
       adminData = JSON.parse(session.value);
-    } catch (e) {
+    } catch {
       adminData = { id: 1 };
     }
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     try {
       // Only attempt processing if we're not in a problematic environment
       if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_VIDEO_PROCESSING === 'true') {
-        const { VideoProcessor } = await import("@/lib/video-processor");
+        const { VideoProcessor } = await import("@/lib/video-processor-safe");
         videoInfo = await VideoProcessor.extractVideoInfo(tempFilePath);
         duration = VideoProcessor.formatDuration(videoInfo.duration);
 
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         tags: tags || null,
         isPremium,
         sortOrder,
-        uploadedBy: adminData.id,
+        uploadedBy: Number(adminData.id),
         isActive: true,
       })
       .returning();
@@ -163,6 +163,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
+    console.error('Upload error:', error);
     return NextResponse.json(
       { error: "Failed to upload video" },
       { status: 500 }

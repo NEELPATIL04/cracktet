@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     let adminData = null;
     try {
       adminData = JSON.parse(session.value);
-    } catch (e) {
+    } catch {
       adminData = { id: 1 };
     }
 
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         tags: tags || null,
         isPremium,
         sortOrder,
-        uploadedBy: adminData.id,
+        uploadedBy: Number(adminData.id),
         isActive: true,
         previewDuration: isPremium ? 20 : null, // 20 seconds for premium videos
       })
