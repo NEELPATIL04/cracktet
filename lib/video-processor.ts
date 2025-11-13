@@ -3,7 +3,18 @@ import { promises as fs } from 'fs';
 import crypto from 'crypto';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { getVideoDurationInSeconds } from 'get-video-duration';
+import { getStoragePath, ensureDir } from './video-utils';
+
+// Make get-video-duration optional to avoid ffprobe-installer dependency
+let getVideoDurationInSeconds: any = null;
+try {
+  // Only import if available, don't fail if not
+  const videoDuration = require('get-video-duration');
+  getVideoDurationInSeconds = videoDuration.getVideoDurationInSeconds;
+} catch (e) {
+  // Package not available or ffprobe-installer missing, will use FFmpeg fallback
+  console.warn('get-video-duration not available, will use FFmpeg for duration extraction');
+}
 
 const execAsync = promisify(exec);
 

@@ -20,6 +20,26 @@ This guide helps resolve video playback issues on production Linux servers.
 
 ## Quick Fix
 
+### Option 1: Simple Setup (No FFmpeg)
+
+For immediate deployment without video processing:
+
+1. Set environment variables:
+   ```bash
+   echo "STORAGE_PATH=$(pwd)/storage" >> .env
+   echo "ENABLE_VIDEO_PROCESSING=false" >> .env
+   ```
+
+2. Install dependencies and build:
+   ```bash
+   npm install
+   npm run build
+   ```
+
+Videos will work with basic MP4 streaming (no HLS, watermarks, or thumbnails).
+
+### Option 2: Full Setup (With FFmpeg)
+
 Run the automated setup script:
 
 ```bash
@@ -90,7 +110,10 @@ sudo yum install -y \
 Add to your `.env` file:
 ```
 STORAGE_PATH=/path/to/your/storage
+ENABLE_VIDEO_PROCESSING=false
 ```
+
+Only set `ENABLE_VIDEO_PROCESSING=true` after FFmpeg is properly installed and working.
 
 Or set in your process manager (PM2 ecosystem file):
 ```json

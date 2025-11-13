@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
     const tags = formData.get("tags") as string;
     const isPremium = formData.get("isPremium") === "true";
     const sortOrder = parseInt(formData.get("sortOrder") as string) || 0;
-    const addWatermark = formData.get("watermark") === "true";
 
     if (!file || !title) {
       return NextResponse.json(
@@ -63,72 +62,29 @@ export async function POST(request: NextRequest) {
     const storagePath = getStoragePath();
     const videoDir = path.join(storagePath, "videos", videoUuid);
     const hlsDir = path.join(videoDir, "hls");
-    const tempFilePath = path.join(videoDir, `original.${fileExtension}`);
+    const originalFilePath = path.join(videoDir, `original.${fileExtension}`);
 
+    // Create directories
     await ensureDir(videoDir);
     await ensureDir(hlsDir);
 
+    // Save the original file
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(tempFilePath, buffer);
+    await fs.writeFile(originalFilePath, buffer);
 
-    // Try video processing, fallback to simple file copy if it fails
-    let videoInfo = { duration: 0, resolution: "Unknown" };
-    let duration = "00:00:00";
-    let result = { success: false, thumbnail: false, error: "" };
-    let processingAttempted = false;
-
-    try {
-      // Only attempt processing if we're not in a problematic environment
-      if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_VIDEO_PROCESSING === 'true') {
-        const { VideoProcessor } = await import("@/lib/video-processor");
-        videoInfo = await VideoProcessor.extractVideoInfo(tempFilePath);
-        duration = VideoProcessor.formatDuration(videoInfo.duration);
-
-        const processingOptions = {
-          inputPath: tempFilePath,
-          outputDir: hlsDir,
-          encrypt: true,
-          watermark: addWatermark ? {
-            text: 'CrackTET',
-            position: 'topRight' as const
-          } : undefined
-        };
-
-        result = await VideoProcessor.processVideoToHLS(processingOptions);
-        processingAttempted = true;
-      }
-    } catch (error) {
-      console.warn("Video processing failed, using fallback:", error);
-      result = { success: false, error: error instanceof Error ? error.message : 'Processing failed' };
-    }
-
-    // If processing failed or wasn't attempted, use fallback
-    if (!result.success) {
-      console.log('Using video fallback method');
-      const fallbackResult = await createVideoFallback(videoUuid, tempFilePath);
-      
-      if (fallbackResult.success) {
-        result = { 
-          success: true, 
-          thumbnail: false,
-          fallbackUsed: true
-        };
-      } else {
-        result = {
-          success: false,
-          error: fallbackResult.error || 'Fallback processing failed'
-        };
-      }
-    }
-
-    if (!result.success) {
-      await fs.rm(videoDir, { recursive: true, force: true });
+    // Create fallback video structure for direct MP4 streaming
+    const fallbackResult = await createVideoFallback(videoUuid, originalFilePath);
+    
+    if (!fallbackResult.success) {
+      // Cleanup on failure
+      await fs.rm(videoDir, { recursive: true, force: true }).catch(() => {});
       return NextResponse.json(
-        { error: `Failed to process video: ${result.error}` },
+        { error: `Failed to process video: ${fallbackResult.error}` },
         { status: 500 }
       );
     }
 
+    // Insert video record into database
     const [newVideo] = await db
       .insert(videos)
       .values({
@@ -137,34 +93,41 @@ export async function POST(request: NextRequest) {
         description: description || "",
         videoUrl: `${videoUuid}/hls/index.m3u8`,
         videoType: "upload",
-        thumbnailUrl: result.thumbnail ? `/api/videos/${videoUuid}/thumbnail` : null,
-        duration,
+        thumbnailUrl: null, // No thumbnail generation without FFmpeg
+        duration: "00:00:00", // Duration will be determined by client
         category: category || null,
         tags: tags || null,
         isPremium,
         sortOrder,
         uploadedBy: adminData.id,
         isActive: true,
+        previewDuration: isPremium ? 20 : null, // 20 seconds for premium videos
       })
       .returning();
 
-    await fs.unlink(tempFilePath).catch(() => {});
+    // Clean up original file to save space
+    await fs.unlink(originalFilePath).catch(() => {});
 
     return NextResponse.json({
       success: true,
       video: newVideo,
-      message: processingAttempted ? "Video uploaded and processed successfully" : "Video uploaded successfully (fallback mode)",
+      message: "Video uploaded successfully (no processing applied)",
       processingInfo: {
-        duration,
-        resolution: videoInfo.resolution,
-        encrypted: processingAttempted && !result.fallbackUsed,
-        watermarked: addWatermark && processingAttempted && !result.fallbackUsed,
-        fallbackUsed: result.fallbackUsed || false
+        duration: "Unknown",
+        resolution: "Unknown",
+        encrypted: false,
+        watermarked: false,
+        fallback: true
       }
     });
+
   } catch (error) {
+    console.error('Upload error:', error);
     return NextResponse.json(
-      { error: "Failed to upload video" },
+      { 
+        error: "Failed to upload video",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
