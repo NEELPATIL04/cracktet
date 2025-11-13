@@ -187,12 +187,6 @@ export default function PublicResourcesPage() {
                   </div>
                 )}
 
-                {/* Preview indicator */}
-                <div className="absolute bottom-2 left-2">
-                  <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-                    Preview: {video.previewDuration}s
-                  </span>
-                </div>
 
                 {/* Duration */}
                 {video.duration && (
