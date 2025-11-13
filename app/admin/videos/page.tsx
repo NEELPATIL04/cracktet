@@ -238,9 +238,6 @@ export default function AdminVideosPage() {
                       Duration
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Views
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Premium
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -278,9 +275,6 @@ export default function AdminVideosPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {video.duration || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {video.views}
                       </td>
                       <td className="px-4 py-3">
                         {video.isPremium ? (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaPlay, FaCrown, FaClock, FaEye, FaTag } from 'react-icons/fa';
+import { FaPlay, FaCrown, FaClock, FaTag } from 'react-icons/fa';
 import { MdVideoLibrary, MdCategory } from 'react-icons/md';
 
 interface Video {
@@ -192,8 +192,12 @@ export default function UserVideosPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <div className="flex items-center gap-1">
-                      <FaEye />
-                      <span>{video.views} views</span>
+                      {video.category && (
+                        <>
+                          <MdCategory />
+                          <span>{video.category}</span>
+                        </>
+                      )}
                     </div>
                     <div className="flex items-center gap-1">
                       <FaClock />
