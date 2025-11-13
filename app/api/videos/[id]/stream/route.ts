@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { videos, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import path from "path";
 import { promises as fs } from "fs";
 import jwt from "jsonwebtoken";
+import { getVideoFilePath } from "@/lib/video-utils";
 
 const JWT_SECRET = process.env.VIDEO_JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -70,25 +70,17 @@ export async function GET(
       );
     }
 
-    // Determine video path
-    const videoPath = path.join(
-      process.cwd(),
-      "storage",
-      "videos",
-      id,
-      "hls",
-      "video.mp4"
-    );
-
-    // Check if file exists
-    try {
-      await fs.access(videoPath);
-    } catch {
+    // Get video file path with fallbacks
+    const videoFile = await getVideoFilePath(id, false);
+    
+    if (!videoFile.type || videoFile.type !== 'mp4') {
       return NextResponse.json(
         { error: "Video file not found" },
         { status: 404 }
       );
     }
+    
+    const videoPath = videoFile.path;
 
     const stats = await fs.stat(videoPath);
     const fileSize = stats.size;

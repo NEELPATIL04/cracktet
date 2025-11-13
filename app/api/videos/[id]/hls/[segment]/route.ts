@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import path from "path";
 import { promises as fs } from "fs";
 import jwt from "jsonwebtoken";
+import { getStoragePath, fileExists } from "@/lib/video-utils";
 
 const JWT_SECRET = process.env.VIDEO_JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -70,18 +71,16 @@ export async function GET(
       );
     }
 
+    const storagePath = getStoragePath();
     const segmentPath = path.join(
-      process.cwd(),
-      "storage",
+      storagePath,
       "videos",
       id,
       "hls",
       segment
     );
 
-    try {
-      await fs.access(segmentPath);
-    } catch {
+    if (!(await fileExists(segmentPath))) {
       return NextResponse.json(
         { error: "Segment not found" },
         { status: 404 }
@@ -162,8 +161,7 @@ export async function GET(
       return new NextResponse(fileBuffer, { headers });
     } else if (segment === 'key') {
       const keyPath = path.join(
-        process.cwd(),
-        "storage",
+        storagePath,
         "videos",
         id,
         "hls",
