@@ -18,7 +18,6 @@
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.38.3",
     "framer-motion": "^11.15.0",
-    "get-video-duration": "^4.1.0",
     "hls.js": "^1.6.14",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
