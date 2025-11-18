@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '../components/AdminLayout';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaVideo, FaUpload, FaYoutube } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaVideo, FaUpload, FaYoutube, FaClock } from 'react-icons/fa';
 import { MdVideoLibrary } from 'react-icons/md';
+import VideoDurationExtractor from '@/components/VideoDurationExtractor';
 
 interface Video {
   id: number;
@@ -30,6 +31,7 @@ export default function AdminVideosPage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDurationExtractor, setShowDurationExtractor] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -211,6 +213,13 @@ export default function AdminVideosPage() {
             >
               <FaUpload />
               Upload Video
+            </button>
+            <button
+              onClick={() => setShowDurationExtractor(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
+            >
+              <FaClock />
+              Fix Durations
             </button>
           </div>
         </div>
@@ -555,6 +564,31 @@ export default function AdminVideosPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Duration Extractor Modal */}
+        {showDurationExtractor && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold">Fix Video Durations</h2>
+                <button
+                  onClick={() => setShowDurationExtractor(false)}
+                  className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <VideoDurationExtractor 
+                  onComplete={() => {
+                    fetchVideos(); // Refresh the video list
+                    setShowDurationExtractor(false);
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
