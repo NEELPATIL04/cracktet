@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { FaLock, FaUserPlus, FaPlay, FaCrown, FaClock } from "react-icons/fa";
 import { MdCategory, MdVideoLibrary } from "react-icons/md";
 import { FiFile, FiEye } from "react-icons/fi";
-import Link from "next/link";
-import Image from "next/image";
 
 interface Resource {
   id: number;
@@ -41,7 +39,6 @@ export default function PublicResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"videos">("videos");
   const [resourcesAuthRequired, setResourcesAuthRequired] = useState(false);
 
   useEffect(() => {
@@ -173,20 +170,15 @@ export default function PublicResourcesPage() {
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer overflow-hidden border group"
             >
               <div className="relative aspect-video bg-gray-200 overflow-hidden">
-                {video.thumbnailUrl ? (
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={video.thumbnailUrl}
-                      alt={video.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-                    <MdVideoLibrary className="text-white text-4xl" />
-                  </div>
-                )}
+                <img
+                  src={video.thumbnailUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgICAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzFlMjkzYiIvPgogICAgICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMzAiIGZpbGw9InJnYmEoNTksIDEzMCwgMjQ2LCAwLjgpIi8+CiAgICAgIDxwb2x5Z29uIHBvaW50cz0iMTUwLDc1IDE1MCwxMDUgMTc1LDkwIiBmaWxsPSJ3aGl0ZSIvPgogICAgICA8dGV4dCB4PSIxNjAiIHk9IjE0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9ImJvbGQiPgogICAgICAgIFZpZGVvIFRodW1ibmFpbAogICAgICA8L3RleHQ+CiAgPC9zdmc+"}
+                  alt={video.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgICAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzMzNzVkYyIvPgogICAgICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMzAiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC44KSIvPgogICAgICA8cG9seWdvbiBwb2ludHM9IjE1MCw3NSAxNTAsMTA1IDE3NSw5MCIgZmlsbD0iIzMzNzVkYyIvPgogICAgICA8dGV4dCB4PSIxNjAiIHk9IjE0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZm9udC13ZWlnaHQ9ImJvbGQiPgogICAgICAgIE5vIFRodW1ibmFpbAogICAgICA8L3RleHQ+CiAgPC9zdmc+";
+                  }}
+                />
 
                 {/* Play overlay */}
                 <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
