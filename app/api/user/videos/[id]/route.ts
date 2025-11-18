@@ -52,7 +52,8 @@ export async function GET(
 
     // Determine access level
     const hasPremiumAccess = isAuthenticated && user?.paymentStatus === "completed";
-    const isPreviewMode = !hasPremiumAccess; // All non-premium users (including guests) get preview mode for premium videos
+    // Preview mode ONLY for premium videos when user doesn't have premium access
+    const isPreviewMode = video.isPremium && !hasPremiumAccess;
 
     const relatedVideos = await db
       .select({

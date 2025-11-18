@@ -53,7 +53,8 @@ export async function GET(
 
     // Determine access level
     const hasFullAccess = isAuthenticated && user?.paymentStatus === "completed";
-    const isPreviewOnly = !isAuthenticated || (video.isPremium && user?.paymentStatus !== "completed");
+    // Preview mode ONLY for premium videos when user doesn't have full access
+    const isPreviewOnly = video.isPremium && (!isAuthenticated || user?.paymentStatus !== "completed");
 
     await db
       .update(videos)
@@ -112,7 +113,7 @@ export async function GET(
       isAuthenticated,
       hasFullAccess,
       isPreviewOnly,
-      previewDuration: video.previewDuration,
+      previewDuration: isPreviewOnly ? video.previewDuration : null,
       isPremium: video.isPremium,
       expiresIn: TOKEN_EXPIRY,
       playerConfig: {

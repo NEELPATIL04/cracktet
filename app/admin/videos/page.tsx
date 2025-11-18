@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '../components/AdminLayout';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaVideo, FaUpload, FaYoutube } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaVideo, FaUpload, FaYoutube, FaClock } from 'react-icons/fa';
 import { MdVideoLibrary } from 'react-icons/md';
+import VideoDurationExtractor from '@/components/VideoDurationExtractor';
 
 interface Video {
   id: number;
   uuid: string;
   title: string;
   description: string | null;
+  thumbnailUrl: string | null;
   videoUrl: string;
   videoType: string;
   duration: string | null;
@@ -30,6 +32,7 @@ export default function AdminVideosPage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDurationExtractor, setShowDurationExtractor] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -38,9 +41,11 @@ export default function AdminVideosPage() {
     category: '',
     tags: '',
     isPremium: false,
+    previewDuration: 20,
     sortOrder: 0,
   });
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -86,6 +91,7 @@ export default function AdminVideosPage() {
           category: '',
           tags: '',
           isPremium: false,
+          previewDuration: 20,
           sortOrder: 0,
         });
         fetchVideos();
@@ -107,6 +113,7 @@ export default function AdminVideosPage() {
     uploadFormData.append('category', formData.category);
     uploadFormData.append('tags', formData.tags);
     uploadFormData.append('isPremium', formData.isPremium.toString());
+    uploadFormData.append('previewDuration', formData.previewDuration.toString());
     uploadFormData.append('sortOrder', formData.sortOrder.toString());
     uploadFormData.append('watermark', 'true');
 
@@ -123,10 +130,28 @@ export default function AdminVideosPage() {
         }
       });
 
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener('load', async () => {
         if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          
+          // If thumbnail file is provided, upload it separately
+          if (thumbnailFile && response.video) {
+            try {
+              const thumbnailFormData = new FormData();
+              thumbnailFormData.append('thumbnail', thumbnailFile);
+              
+              await fetch(`/api/admin/videos/${response.video.uuid}/thumbnail`, {
+                method: 'POST',
+                body: thumbnailFormData
+              });
+            } catch (error) {
+              console.error('Error uploading thumbnail:', error);
+            }
+          }
+          
           setShowUploadModal(false);
           setUploadFile(null);
+          setThumbnailFile(null);
           setFormData({
             title: '',
             description: '',
@@ -135,6 +160,7 @@ export default function AdminVideosPage() {
             category: '',
             tags: '',
             isPremium: false,
+            previewDuration: 20,
             sortOrder: 0,
           });
           fetchVideos();
@@ -212,6 +238,13 @@ export default function AdminVideosPage() {
               <FaUpload />
               Upload Video
             </button>
+            <button
+              onClick={() => setShowDurationExtractor(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
+            >
+              <FaClock />
+              Fix Durations
+            </button>
           </div>
         </div>
 
@@ -226,6 +259,9 @@ export default function AdminVideosPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Thumbnail
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Title
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -238,10 +274,10 @@ export default function AdminVideosPage() {
                       Duration
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Views
+                      Premium
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Premium
+                      Preview (sec)
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -254,6 +290,30 @@ export default function AdminVideosPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {videos.map((video) => (
                     <tr key={video.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="w-16 h-9 rounded overflow-hidden bg-gray-100">
+                          {video.thumbnailUrl ? (
+                            <img
+                              src={video.thumbnailUrl}
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Show fallback icon if thumbnail fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = document.createElement('div');
+                                fallback.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600';
+                                fallback.innerHTML = '<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>';
+                                target.parentNode?.appendChild(fallback);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                              <MdVideoLibrary className="text-white text-sm" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{video.title}</div>
@@ -279,9 +339,6 @@ export default function AdminVideosPage() {
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {video.duration || '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {video.views}
-                      </td>
                       <td className="px-4 py-3">
                         {video.isPremium ? (
                           <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
@@ -292,6 +349,9 @@ export default function AdminVideosPage() {
                             Free
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500">
+                        {video.previewDuration}s
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -466,6 +526,26 @@ export default function AdminVideosPage() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Thumbnail Image (Optional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {thumbnailFile && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Selected: {thumbnailFile.name} ({(thumbnailFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">
+                    Recommended: 1280x720 pixels, JPEG/PNG/WebP, max 5MB
+                  </p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Title *
                   </label>
                   <input
@@ -526,6 +606,24 @@ export default function AdminVideosPage() {
                   </label>
                 </div>
 
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Preview Duration (seconds)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.previewDuration}
+                    onChange={(e) => setFormData({ ...formData, previewDuration: parseInt(e.target.value) || 20 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="5"
+                    max="300"
+                    placeholder="20"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    How many seconds non-premium users can watch (5-300 seconds)
+                  </p>
+                </div>
+
                 {uploading && (
                   <div className="mb-4">
                     <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -561,6 +659,31 @@ export default function AdminVideosPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Duration Extractor Modal */}
+        {showDurationExtractor && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-bold">Fix Video Durations</h2>
+                <button
+                  onClick={() => setShowDurationExtractor(false)}
+                  className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <VideoDurationExtractor 
+                  onComplete={() => {
+                    fetchVideos(); // Refresh the video list
+                    setShowDurationExtractor(false);
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}

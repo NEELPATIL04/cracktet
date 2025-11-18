@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     const category = formData.get("category") as string;
     const tags = formData.get("tags") as string;
     const isPremium = formData.get("isPremium") === "true";
+    const previewDuration = parseInt(formData.get("previewDuration") as string) || 20;
     const sortOrder = parseInt(formData.get("sortOrder") as string) || 0;
     const addWatermark = formData.get("watermark") === "true";
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Dynamic import to avoid build-time FFProbe dependency
     let videoInfo, duration, result;
     try {
-      const { VideoProcessor } = await import("@/lib/video-processor");
+      const { VideoProcessor } = await import("@/lib/video-processor-simple");
       videoInfo = await VideoProcessor.extractVideoInfo(tempFilePath);
       duration = VideoProcessor.formatDuration(videoInfo.duration);
 
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
         category: category || null,
         tags: tags || null,
         isPremium,
+        previewDuration,
         sortOrder,
         uploadedBy: adminData.id,
         isActive: true,
