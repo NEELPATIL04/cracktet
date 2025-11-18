@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { resources } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { readFile } from "fs/promises";
+import path from "path";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Verify user session
+    const sessionCookie = request.cookies.get("user_session");
+    console.log("🔍 Stream API - Session cookie:", sessionCookie ? "exists" : "missing");
+
+    if (!sessionCookie) {
+      console.log("❌ Stream: No session cookie found");
+      return NextResponse.json({ error: "Unauthorized - Please log in again" }, { status: 401 });
+    }
+
+    console.log("✅ Stream: Session valid, streaming resource");
+
+    const { id: uuidParam } = await params;
+    console.log("📄 Fetching resource UUID:", uuidParam);
+
+    // Fetch resource by UUID (must be active)
+    const [resource] = await db
+      .select()
+      .from(resources)
+      .where(and(eq(resources.uuid, uuidParam), eq(resources.isActive, true)))
+      .limit(1);
+
+    if (!resource) {
+      console.log("❌ Resource not found or inactive");
+      return NextResponse.json(
+        { error: "Resource not found or inactive" },
+        { status: 404 }
+      );
+    }
+
+    console.log("✅ Resource found:", resource.fileName);
+    console.log("📄 File URL from DB:", resource.fileUrl);
+
+    // Read the original PDF file from private storage
+    // fileUrl is like "/storage/pdfs/resource_uuid" - we need to append "original.pdf"
+    const filePath = path.join(process.cwd(), resource.fileUrl.substring(1), "original.pdf");
+    console.log("📁 Reading file from:", filePath);
+
+    const fileBuffer = await readFile(filePath);
+    console.log("✅ File read successfully, size:", fileBuffer.length, "bytes");
+
+    // Return the PDF file with proper headers
+    return new NextResponse(fileBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "inline",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error streaming resource:", error);
+    console.error("❌ Error stack:", error instanceof Error ? error.stack : 'Unknown error');
+    return NextResponse.json(
+      { error: `Failed to stream resource: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      { status: 500 }
+    );
+  }
+}

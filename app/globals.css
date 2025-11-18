@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --primary: #ff6b35;
-  --primary-light: #ff8c61;
-  --primary-dark: #e55525;
-  --secondary: #ffffff;
-  --secondary-gray: #f5f5f5;
+  --primary: #0d599c;
+  --primary-light: #00aff0;
+  --primary-dark: #094a7d;
+  --secondary: #00aff0;
+  --secondary-gray: #aace47;
 }
 
 * {
@@ -27,7 +27,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--secondary);
+  background-color: #fafafa;
 }
 
 @layer utilities {

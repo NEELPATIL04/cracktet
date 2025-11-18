@@ -6,9 +6,15 @@ import { z } from "zod";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  email: z.string().email("Please enter a valid email address"),
   district: z.string().min(1, "District is required"),
+  address: z.string().min(1, "Address is required"),
   mobile: z.string().regex(/^\d{10}$/, "Mobile number must be exactly 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 export async function POST(request: NextRequest) {
@@ -18,28 +24,45 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = registerSchema.parse(body);
 
+    // Check if email already exists
+    const existingEmail = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, validatedData.email))
+      .limit(1);
+
+    if (existingEmail.length > 0) {
+      return NextResponse.json(
+        { error: "Email already registered" },
+        { status: 400 }
+      );
+    }
+
     // Check if mobile number already exists
-    const existingUser = await db
+    const existingMobile = await db
       .select()
       .from(users)
       .where(eq(users.mobile, validatedData.mobile))
       .limit(1);
 
-    if (existingUser.length > 0) {
+    if (existingMobile.length > 0) {
       return NextResponse.json(
         { error: "Mobile number already registered" },
         { status: 400 }
       );
     }
 
-    // Insert new user
+    // Insert new user - active by default for normal dashboard access
     const newUser = await db
       .insert(users)
       .values({
         name: validatedData.name,
+        email: validatedData.email,
         district: validatedData.district,
+        address: validatedData.address,
         mobile: validatedData.mobile,
         password: validatedData.password, // In production, hash this password!
+        isActive: true, // Allow immediate dashboard access
       })
       .returning();
 

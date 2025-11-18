@@ -9,8 +9,12 @@ export async function GET() {
       .select({
         id: users.id,
         name: users.name,
+        email: users.email,
         district: users.district,
+        address: users.address,
         mobile: users.mobile,
+        paymentStatus: users.paymentStatus,
+        paymentAmount: users.paymentAmount,
         createdAt: users.createdAt,
       })
       .from(users)

@@ -2,6 +2,9 @@
   "navbar": {
     "home": "Home",
     "register": "Register",
+    "login": "Login",
+    "logout": "Logout",
+    "resources": "Resources",
     "admin": "Admin",
     "language": "Language"
   },
@@ -60,9 +63,10 @@
           "title": "Multi-language Support",
           "description": "Learn in your preferred language - English, Hindi, or Marathi"
         },
+        
         {
-          "title": "Free Resources",
-          "description": "Access to quality study materials and mock tests at no cost"
+          "title": "24/7 Online Access",
+          "description": "Access your study materials and tests anytime, anywhere - at your convenience"
         }
       ]
     }
@@ -73,12 +77,18 @@
     "form": {
       "name": "Full Name",
       "namePlaceholder": "Enter your full name",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
       "district": "District",
       "districtPlaceholder": "Select your district",
+      "address": "Address",
+      "addressPlaceholder": "Enter your full address",
       "mobile": "Mobile Number",
       "mobilePlaceholder": "Enter 10-digit mobile number",
       "password": "Password",
       "passwordPlaceholder": "Create a strong password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
       "submit": "Register Now"
     },
     "districts": [
@@ -122,13 +132,34 @@
     "successMessage": "You have been successfully registered. Redirecting to home...",
     "errors": {
       "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "emailExists": "This email is already registered",
       "districtRequired": "Please select a district",
+      "addressRequired": "Address is required",
       "mobileRequired": "Mobile number is required",
       "mobileInvalid": "Please enter a valid 10-digit mobile number",
       "mobileExists": "This mobile number is already registered",
       "passwordRequired": "Password is required",
-      "passwordMinLength": "Password must be at least 6 characters"
+      "passwordMinLength": "Password must be at least 6 characters",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match"
     }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to access your resources",
+    "form": {
+      "identifier": "Email or Phone Number",
+      "identifierPlaceholder": "Enter your email or phone",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "signingIn": "Signing in..."
+    },
+    "noAccount": "Don't have an account?",
+    "registerHere": "Register here",
+    "backToHome": "← Back to Home"
   },
   "admin": {
     "title": "Registered Users",
@@ -136,7 +167,9 @@
     "table": {
       "id": "ID",
       "name": "Name",
+      "email": "Email",
       "district": "District",
+      "address": "Address",
       "mobile": "Mobile",
       "registeredAt": "Registered At"
     },
@@ -159,5 +192,94 @@
       "invalidCredentials": "Invalid admin ID or password"
     },
     "redirecting": "Login successful! Redirecting..."
+  },
+  "pdfViewer": {
+    "initialWarning": {
+      "title": "IMPORTANT WARNING",
+      "subtitle": "DO NOT attempt to:",
+      "rules": [
+        "Take screenshots of this content",
+        "Download or save this PDF",
+        "Copy any text or content",
+        "Share or distribute this material"
+      ],
+      "banWarning": "VIOLATION WILL RESULT IN IMMEDIATE ACCOUNT BAN",
+      "noRefund": "NO REFUND WILL BE PROVIDED",
+      "proceed": "I Understand - Proceed to View PDF"
+    },
+    "violation": {
+      "title": "Screenshot Violation!",
+      "finalTitle": "FINAL VIOLATION - ACCOUNT BANNED!",
+      "detected": "Screenshot attempt detected and blocked.",
+      "violationNumber": "Violation #{count} of 3",
+      "warningsLeft": "{count} warning(s) remaining before permanent ban",
+      "finalMessage": "Account will be logged out immediately. All access revoked.",
+      "loggingOut": "Logging out in 2 seconds...",
+      "logged": "This violation has been logged and reported to administrators."
+    },
+    "devTools": {
+      "title": "Developer Tools Detected",
+      "message": "This action has been logged"
+    },
+    "warnings": {
+      "rightClick": "Right-click is disabled on this content",
+      "actionDisabled": "This action is disabled for content protection",
+      "copyDisabled": "Copying is disabled on this content"
+    }
+  },
+  "adminNotifications": {
+    "title": "Security Violations",
+    "subtitle": "Monitor user violations and screenshot attempts",
+    "table": {
+      "id": "ID",
+      "user": "User",
+      "email": "Email",
+      "resource": "Resource",
+      "type": "Type",
+      "violationNumber": "Strike",
+      "timestamp": "Time",
+      "notified": "Notified"
+    },
+    "noViolations": "No violations reported",
+    "loading": "Loading violations...",
+    "markNotified": "Mark as Notified",
+    "filter": {
+      "all": "All Violations",
+      "unnotified": "Unnotified Only",
+      "critical": "Critical (3 Strikes)"
+    }
+  },
+  "resources": {
+    "title": "Study Resources",
+    "subtitle": "Access your study materials and PDF resources",
+    "loading": "Loading resources...",
+    "noResources": "No Resources Available",
+    "noResourcesMessage": "Study materials will appear here once uploaded by admin.",
+    "showing": "Showing",
+    "resource": "resource",
+    "resources": "resources",
+    "fileSize": "File Size",
+    "added": "Added",
+    "viewResource": "View Resource",
+    "retry": "Retry",
+    "error": "Failed to load resources. Please try again."
+  },
+  "aboutUs": {
+    "title": "About Us",
+    "tagline": "| नानात्वेन सुदृढ: समाज: |",
+    "para1": "Relying on such thought Gramgaurav Foundation has its overwhelming influence in all sectors where we plan for growth and development.",
+    "para2": "Beyond this multiple perspectives on environmental, political, social issues are welcomed here as a NGO platform.",
+    "para3": "Crack TET is one of the initiative for the future teachers which will apparently help to step in the journey of examination and learning."
+  },
+  "contactUs": {
+    "title": "Contact Us",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "call": "Call"
+  },
+  "cta": {
+    "title": "Ready to Start Your TET Journey?",
+    "subtitle": "Join thousands of aspiring teachers preparing for Maharashtra TET",
+    "button": "Register Now"
   }
 }

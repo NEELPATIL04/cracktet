@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, transactions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 
@@ -8,14 +8,19 @@ export async function DELETE(request: NextRequest) {
   try {
     // Check if admin is authenticated
     const cookieStore = await cookies();
-    const adminSession = cookieStore.get("admin_session");
+    const adminSession = cookieStore.get("admin-auth");
+
+    console.log("🔍 Delete User API - Admin auth cookie:", adminSession ? "exists" : "missing");
 
     if (!adminSession) {
+      console.log("❌ Delete: No admin auth cookie found");
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
+
+    console.log("✅ Delete: Admin authenticated");
 
     // Get user ID from request body
     const body = await request.json();
@@ -28,7 +33,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete the user
+    // First, delete associated transactions (if any)
+    await db
+      .delete(transactions)
+      .where(eq(transactions.userId, userId));
+
+    // Then delete the user
     const deletedUser = await db
       .delete(users)
       .where(eq(users.id, userId))
