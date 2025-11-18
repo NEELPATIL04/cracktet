@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 import ProtectedPDFViewer from "@/components/ProtectedPDFViewer";
 import MobilePDFViewer from "@/components/MobilePDFViewer";
+import PublicPDFViewer from "@/components/PublicPDFViewer";
 
 interface Resource {
   uuid: string;
@@ -35,6 +36,8 @@ export default function ViewResourcePage() {
   const [serverMobileOS, setServerMobileOS] = useState(false);
   const [serverUserOS, setServerUserOS] = useState("Unknown");
   const [osCheckComplete, setOsCheckComplete] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isPublicPreview, setIsPublicPreview] = useState(false);
 
   // Check user's OS from server JWT token
   const checkMobileOS = useCallback(async () => {
@@ -65,11 +68,27 @@ export default function ViewResourcePage() {
   const fetchResource = useCallback(
     async (id: string) => {
       try {
+        // First try authenticated API
         const response = await fetch(`/api/resources/${id}`);
 
         if (response.status === 401) {
-          console.log("❌ Unauthorized - redirecting to login");
-          router.push("/login");
+          console.log("❌ Unauthorized - trying public preview");
+          setIsAuthenticated(false);
+          
+          // Try public preview API
+          const previewResponse = await fetch(`/api/resources/${id}/preview`);
+          
+          if (!previewResponse.ok) {
+            throw new Error("Resource not found or unavailable for preview");
+          }
+          
+          const previewData = await previewResponse.json();
+          console.log("✅ Public preview loaded:", previewData.resource?.title);
+          
+          setResource(previewData.resource);
+          setUserData(null);
+          setIsPublicPreview(true);
+          setLoading(false);
           return;
         }
 
@@ -79,13 +98,15 @@ export default function ViewResourcePage() {
         }
 
         const data = await response.json();
-        console.log("✅ Resource loaded:", data.resource?.title);
+        console.log("✅ Authenticated resource loaded:", data.resource?.title);
         console.log("✅ User data received:", data.user?.email);
 
+        setIsAuthenticated(true);
         setResource(data.resource);
-        setUserData(data.user); // Set user data from API response
+        setUserData(data.user);
+        setIsPublicPreview(false);
 
-        // ✅ Log resource access
+        // ✅ Log resource access for authenticated users
         await fetch("/api/resources/log-access", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -100,18 +121,27 @@ export default function ViewResourcePage() {
         setLoading(false);
       }
     },
-    [router]
+    []
   );
 
   useEffect(() => {
-    // ✅ Check mobile OS and fetch resource
+    // ✅ Fetch resource first, then check OS only if authenticated
     if (params.id) {
-      checkMobileOS();
       fetchResource(params.id as string);
     }
-  }, [params.id, fetchResource, checkMobileOS]);
+  }, [params.id, fetchResource]);
 
-  if (loading || !osCheckComplete) {
+  useEffect(() => {
+    // ✅ Check mobile OS only for authenticated users
+    if (isAuthenticated && !osCheckComplete) {
+      checkMobileOS();
+    } else if (isAuthenticated === false) {
+      // Skip OS check for public preview
+      setOsCheckComplete(true);
+    }
+  }, [isAuthenticated, osCheckComplete, checkMobileOS]);
+
+  if (loading || (isAuthenticated && !osCheckComplete)) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
         <div className="text-center">
@@ -120,14 +150,14 @@ export default function ViewResourcePage() {
             Loading resource...
           </p>
           <p className="text-gray-600 text-sm mt-2">
-            Checking device compatibility...
+            {isAuthenticated ? "Checking device compatibility..." : "Loading preview..."}
           </p>
         </div>
       </div>
     );
   }
 
-  if (error || !resource || !userData) {
+  if (error || !resource) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
         <div className="text-center max-w-md px-6">
@@ -135,7 +165,7 @@ export default function ViewResourcePage() {
           <h2 className="text-3xl font-bold text-red-600 mb-4">Error</h2>
           <p className="text-gray-700 mb-6">
             {error ||
-              "Resource not found or you don't have permission to view it"}
+              "Resource not found or unavailable"}
           </p>
           <div className="flex space-x-4 justify-center">
             <button
@@ -146,7 +176,7 @@ export default function ViewResourcePage() {
               Go Back
             </button>
             <button
-              onClick={() => router.push("/dashboard/resources")}
+              onClick={() => router.push("/resources")}
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
             >
               View All Resources
@@ -157,17 +187,35 @@ export default function ViewResourcePage() {
     );
   }
 
-  // Render appropriate PDF viewer based on server-verified OS
+  // Handle public preview mode
+  if (isPublicPreview) {
+    console.log("🌐 Loading Public PDF Viewer (preview mode)");
+    return (
+      <PublicPDFViewer
+        pdfUrl={`/api/resources/${resource.uuid}/preview-stream`}
+        resourceTitle={resource.title}
+        pageCount={resource.pageCount}
+        previewPages={resource.previewPages}
+        resourceId={resource.uuid}
+      />
+    );
+  }
+
+  // For authenticated users, render based on server-verified OS
+  if (!userData) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
+
   console.log(
     `📱 PDF Viewer routing - Server OS: ${serverUserOS}, isMobileOS: ${serverMobileOS}`
   );
-
-  // Debug: Show which viewer will be used
-  if (serverMobileOS) {
-    console.log("🔄 Will use MobilePDFViewer for:", serverUserOS);
-  } else {
-    console.log("🔄 Will use ProtectedPDFViewer for:", serverUserOS);
-  }
 
   if (serverMobileOS) {
     console.log("📱 Loading Mobile PDF Viewer for:", serverUserOS);
